@@ -1,0 +1,1 @@
+.\bin\dmg-bin.exe build .\tmp\our-big-hfsimage.dmg .\output\038-0316-001.dmg

@@ -1,0 +1,3 @@
+.\bin\xpwntool.exe .\OUTPUT\Firmware\dfu\iBSS.k66ap.RELEASE.dfu  .\OUTPUT\Firmware\dfu\decrypted.dfu -iv 03baadf8801e8b7cdcee5a9f53609d0c -k c9f8bd4e52530ec8ef3e2b5926777f624061a38d09f07785287de6e88353f752
+.\bin\bspatch.exe .\OUTPUT\Firmware\dfu\decrypted.dfu .\OUTPUT\Firmware\dfu\patched.dfu .\8C154\iBSS.k66ap.RELEASE.patch
+.\bin\xpwntool.exe .\OUTPUT\Firmware\dfu\patched.dfu .\OUTPUT\Firmware\dfu\encrypted.dfu -iv 03baadf8801e8b7cdcee5a9f53609d0c -k c9f8bd4e52530ec8ef3e2b5926777f624061a38d09f07785287de6e88353f752 -t .\OUTPUT\Firmware\dfu\iBSS.k66ap.RELEASE.dfu

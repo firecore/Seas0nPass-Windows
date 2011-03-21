@@ -1,0 +1,1 @@
+.\bin\vfdecrypt -i .\UNZIPPED_ORIGINAL\018-7896-152.dmg -k a30f67f64a546a28bfd5c6e2e43d14fd8111c55641fc6dc392891e2b14e7e8138db9344c -o ipsw/018-7896-152.dmg

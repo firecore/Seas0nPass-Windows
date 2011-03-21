@@ -1,0 +1,1 @@
+.\bin\dmg-bin.exe extract .\tmp\our-big.dmg .\tmp\our-big-hfsimage.dmg
