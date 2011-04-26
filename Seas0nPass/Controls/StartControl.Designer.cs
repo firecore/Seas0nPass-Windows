@@ -33,14 +33,11 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.ipswPictureBox = new System.Windows.Forms.PictureBox();
             this.ipswContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.ipswLabel = new System.Windows.Forms.Label();
             this.tetheredPictureBox = new System.Windows.Forms.PictureBox();
             this.tetherLabel = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ipswPictureBox)).BeginInit();
-            this.ipswContextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tetheredPictureBox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -85,25 +82,8 @@
             // 
             // ipswContextMenuStrip
             // 
-            this.ipswContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem2,
-            this.toolStripMenuItem3});
             this.ipswContextMenuStrip.Name = "ipswContextMenuStrip";
-            this.ipswContextMenuStrip.Size = new System.Drawing.Size(153, 70);
-            // 
-            // toolStripMenuItem2
-            // 
-            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem2.Text = "4.2.1 8C154";
-            this.toolStripMenuItem2.Click += new System.EventHandler(this.toolStripMenuItem2_Click);
-            // 
-            // toolStripMenuItem3
-            // 
-            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItem3.Text = "4.3 8F191m";
-            this.toolStripMenuItem3.Click += new System.EventHandler(this.toolStripMenuItem3_Click);
+            this.ipswContextMenuStrip.Size = new System.Drawing.Size(153, 26);
             // 
             // ipswLabel
             // 
@@ -156,7 +136,6 @@
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ipswPictureBox)).EndInit();
-            this.ipswContextMenuStrip.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.tetheredPictureBox)).EndInit();
             this.ResumeLayout(false);
 
@@ -170,7 +149,5 @@
         private System.Windows.Forms.PictureBox tetheredPictureBox;
         private System.Windows.Forms.Label tetherLabel;
         private System.Windows.Forms.ContextMenuStrip ipswContextMenuStrip;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
     }
 }

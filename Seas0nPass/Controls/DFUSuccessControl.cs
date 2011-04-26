@@ -39,7 +39,15 @@ namespace Seas0nPass.Controls
 
         public void SetFileName(string fileName)
         {
-            label1.Text = string.Format(successMessage, fileName);
+            Action action = delegate
+            {
+                this.label1.Text = string.Format(successMessage, fileName);
+            };
+
+            if (InvokeRequired)
+                Invoke(action);
+            else
+                action();
         }
     }
 }

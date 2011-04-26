@@ -20,10 +20,46 @@ namespace Seas0nPass.Models
 {
     public class PatchModel : IPatchModel
     {
-
-
-
+        private IPatch patch;
+        private IFirmwareVersionModel firmwareVersionModel;
         private int currentProgress;
+        private string currentMessage;
+
+        public event EventHandler CurrentMessageChanged;
+        public event EventHandler ProgressUpdated;
+        public event EventHandler Finished;
+
+        public int CurrentProgress
+        {
+            get { return currentProgress; }
+        }
+
+        public string CurrentMessage
+        {
+            get { return currentMessage; }
+        }
+
+        public void SetFirmwareVersionModel(IFirmwareVersionModel firmwareVersionModel)
+        {
+            this.firmwareVersionModel = firmwareVersionModel;
+        }
+
+        public void StartProcess()
+        {
+            var worker = new BackgroundWorker();
+            worker.DoWork += worker_DoWork;
+            worker.RunWorkerAsync();
+        }
+
+        private void worker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            PerformPatch();
+        }
+
+        public void Cancel()
+        {
+            throw new NotImplementedException();
+        }
 
         private void UpdateProgress(int value)
         {
@@ -31,8 +67,6 @@ namespace Seas0nPass.Models
             if (ProgressUpdated != null)
                 ProgressUpdated(this, EventArgs.Empty);
         }
-
-        public event EventHandler CurrentMessageChanged;
 
         private void UpdateCurrentMessage(string message)
         {
@@ -42,10 +76,6 @@ namespace Seas0nPass.Models
             if (CurrentMessageChanged != null)
                 CurrentMessageChanged(this, EventArgs.Empty);
         }
-
-        private string currentMessage;
-        public string CurrentMessage { get {return currentMessage;} }
-
 
         private void SaveDFUAndTetherFiles()
         {
@@ -59,19 +89,25 @@ namespace Seas0nPass.Models
                       Path.Combine(firmwareVersionModel.AppDataFolder, Utils.IBSS_FILE_NAME), true);
         }
 
+        private IPatch GetPatch()
+        {
+            if (firmwareVersionModel.SelectedVersion != null)
+                return new UniversalPatch(firmwareVersionModel.SelectedVersion.CommandsText);
+            throw new InvalidOperationException("Unknown firmware version");
+        }
 
         private void PerformPatch()
         {
-            IPatch patch = firmwareVersionModel.Version == FirmwareVersions.Version421_8C154 ? 
-                (IPatch)new Patch_421_8C154() : 
-                (IPatch)new Patch_43_8F191m();
-            
-            patch.CurrentMessageChanged += (sender, args) => UpdateCurrentMessage(patch.CurrentMessage);
-            patch.CurrentProgressChanged += (sender, args) => UpdateProgress(patch.CurrentProgress);
+            patch = GetPatch();
 
-            firmwareVersionModel.InitBinaries();
+            patch.CurrentMessageChanged += patch_CurrentMessageChanged;
+            patch.CurrentProgressChanged += patch_CurrentProgressChanged;
 
             string resultFile = patch.PerformPatch();
+
+            patch.CurrentMessageChanged -= patch_CurrentMessageChanged;
+            patch.CurrentProgressChanged -= patch_CurrentProgressChanged;
+            patch = null;
 
             SaveDFUAndTetherFiles();
 
@@ -83,47 +119,14 @@ namespace Seas0nPass.Models
                 Finished(this, EventArgs.Empty);
         }
 
-
-        public void StartProcess()
+        private void patch_CurrentMessageChanged(object sender, EventArgs args)
         {
-
-            var worker = new BackgroundWorker();
-            worker.DoWork += new DoWorkEventHandler(worker_DoWork);
-            worker.RunWorkerAsync();
-
+            UpdateCurrentMessage(patch.CurrentMessage);
         }
 
-        void worker_DoWork(object sender, DoWorkEventArgs e)
+        private void patch_CurrentProgressChanged(object sender, EventArgs args)
         {
-
-            PerformPatch();
-        }
-
-        public void Cancel()
-        {
-            throw new NotImplementedException();
-        }
-
-        public event EventHandler ProgressUpdated;
-
-        public event EventHandler Finished;
-
-
-
-        
-
-
-        public int CurrentProgress
-        {
-            get { return currentProgress; }
-        }
-
-
-        private IFirmwareVersionModel firmwareVersionModel;
-
-        public void SetFirmwareVersionModel(IFirmwareVersionModel firmwareVersionModel)
-        {
-            this.firmwareVersionModel = firmwareVersionModel;
+            UpdateProgress(patch.CurrentProgress);
         }
     }
 }

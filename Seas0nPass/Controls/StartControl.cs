@@ -17,11 +17,16 @@ using System.Windows.Forms;
 using Seas0nPass.Interfaces;
 using System.Security.Principal;
 using Seas0nPass.CustomEventArgs;
+using Seas0nPass.Models;
 
 namespace Seas0nPass.Controls
 {
     public partial class StartControl : UserControl, IStartView
     {
+        private readonly Image tetherEnabledImage;
+        private readonly Image tetherDisabledImage;
+        private readonly Image tetherNotRequiredImage;
+
         public StartControl()
         {
             InitializeComponent();
@@ -30,11 +35,7 @@ namespace Seas0nPass.Controls
             tetherEnabledImage = tetheredPictureBox.ErrorImage;
         }
 
-        private Image tetherEnabledImage;
-        private Image tetherDisabledImage;
-        private Image tetherNotRequiredImage;
-
-
+        public event EventHandler<CreateIPSWFirmwareClickedEventArgs> CreateIPSW_fwVersion_Clicked;
         public event EventHandler<CreateIPSWClickedEventArgs> CreateIPSWClicked;
         public event EventHandler TetherClicked;
 
@@ -67,24 +68,6 @@ namespace Seas0nPass.Controls
                 TetherClicked(sender, e);
         }
 
-
-        public event EventHandler CreateIPSW_421_8C154_Clicked;
-
-        public event EventHandler CreateIPSW_43_8F191m_Clicked;
-
-        private void toolStripMenuItem2_Click(object sender, EventArgs e)
-        {
-            if (CreateIPSW_421_8C154_Clicked != null)
-                CreateIPSW_421_8C154_Clicked(sender, e);
-        }
-
-        private void toolStripMenuItem3_Click(object sender, EventArgs e)
-        {
-            if (CreateIPSW_43_8F191m_Clicked != null)
-                CreateIPSW_43_8F191m_Clicked(sender, e);
-        }
-
-
         public void DisableTether()
         {            
             tetheredPictureBox.BackgroundImage = tetherDisabledImage;
@@ -103,12 +86,31 @@ namespace Seas0nPass.Controls
         {
             tetheredPictureBox.BackgroundImage = tetherNotRequiredImage;
             tetherLabel.Enabled = true;
+        }
 
+        public void InitFirmwaresList(FirmwareVersion[] firmwares)
+        {
+            ipswContextMenuStrip.Items.Clear();
+            var items = new ToolStripMenuItem[firmwares.Length];
+            for (int i = 0; i < firmwares.Length; i++)
+            {
+                items[i] = new ToolStripMenuItem(firmwares[i].Name, null, ipswPictureBoxFirmware_Click)
+                {
+                    Tag = firmwares[i]
+                };
+            }
+            ipswContextMenuStrip.Items.AddRange(items);
+        }
+
+        private void ipswPictureBoxFirmware_Click(object sender, EventArgs e)
+        {
+            var fwVersion = (FirmwareVersion)((ToolStripMenuItem)sender).Tag;
+            if (CreateIPSW_fwVersion_Clicked != null)
+                CreateIPSW_fwVersion_Clicked(this, new CreateIPSWFirmwareClickedEventArgs(fwVersion));
         }
 
         private void SetPressedState(Control control, bool isPressed)
         {
-
             control.BackColor = isPressed ? Color.FromArgb(255, Color.DarkGray) : Color.White;
         }
 

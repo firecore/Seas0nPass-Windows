@@ -15,15 +15,16 @@ namespace Seas0nPass.Interfaces
 {
     public interface IDownloadModel
     {
-
         void StartDownload();
         void CancelDownload();
+
         event EventHandler ProgressChanged;
-        event EventHandler DownloadFinished;
+        event EventHandler DownloadCompleted;
+        event EventHandler DownloadFailed;
+        event EventHandler DownloadCanceled;
+
         int Percentage { get; }
 
         void SetFirmwareVersionModel(IFirmwareVersionModel firmwareVersionModel);
-
-
     }
 }

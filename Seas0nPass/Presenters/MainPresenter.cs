@@ -18,11 +18,15 @@ namespace Seas0nPass.Presenters
 {
     public class MainPresenter
     {
+        private DFUPresenter dfuPresenter;
+        private PatchPresenter patchPresetner;
+        private TetherPresenter tetherPresenter;
         private IMainView view;
         public MainPresenter(IMainView view)
         {
             this.view = view;
         }
+
         private IStartView startControl;
         private IDownloadModel downloadModel;
         private IDownloadView downloadView;
@@ -41,8 +45,6 @@ namespace Seas0nPass.Presenters
 
         private ITetherView tetherView;
         private ITetherModel tetherModel;
-
-
 
         private void InstantiateModelsAndViews()
         {
@@ -67,27 +69,26 @@ namespace Seas0nPass.Presenters
             dfuModel.SetFirmwareVersionModel(firmwareVersionModel);
             tetherModel.SetFirmwareVersionModel(firmwareVersionModel);
 
-
+            tetherPresenter = new TetherPresenter(tetherModel, tetherView);
+            tetherPresenter.ProcessFinished += tetherPresenter_ProcessFinished;
+            patchPresetner = new PatchPresenter(patchControl, patchModel);
+            patchPresetner.Finished += patchPresetner_Finished;
+            dfuPresenter = new DFUPresenter(dfuModel, dfuControl);
+            dfuPresenter.ProcessFinished += dfuPresenter_ProcessFinished;
+            downloadPresenter = new DownloadPresenter(downloadModel, downloadView);
+            downloadPresenter.ProcessFinished += downloadPresenter_ProcessFinished;
         }
 
         private void ShowStartPage()
         {
             var patchedVersion = firmwareVersionDetector.Version;
 
-            switch (patchedVersion)
-            {
-                case FirmwareVersions.Version421_8C154:
-                    startControl.SetTetherNotRequiredState();
-                    break;
-                case FirmwareVersions.Version43_8F191m:
-                    startControl.EnableTether();
-                    break;
-                case FirmwareVersions.Unknown:
-                    startControl.DisableTether();
-                    break;
-                default:
-                    throw new InvalidOperationException("Unknown version detected");
-            }
+            if (patchedVersion == null)
+                startControl.DisableTether();
+            else if (patchedVersion.NeedTether)
+                startControl.EnableTether();
+            else
+                startControl.SetTetherNotRequiredState();
 
             view.ShowControl(startControl);
         }
@@ -95,97 +96,91 @@ namespace Seas0nPass.Presenters
         public void Init()
         {
             InstantiateModelsAndViews();
+
+            startControl.InitFirmwaresList(firmwareVersionModel.KnownVersions.ToArray());
+
             startControl.CreateIPSWClicked += startControl_CreateIPSWClicked;
-            startControl.CreateIPSW_421_8C154_Clicked += new EventHandler(startControl_CreateIPSW_421_8C154_Clicked);
-            startControl.CreateIPSW_43_8F191m_Clicked += new EventHandler(startControl_CreateIPSW_43_8F191m_Clicked);
-            startControl.TetherClicked += new EventHandler(startControl_TetherClicked);
-            dfuSuccessControl.ButtonClicked += new EventHandler(dfuSuccessControl_ButtonClicked);
-            tetherSuccessControl.ButtonClicked += new EventHandler(tetherSuccessControl_ButtonClicked);
-            mainModel.InitWorkingFolder();
+            startControl.CreateIPSW_fwVersion_Clicked += startControl_CreateIPSW_fwVersion_Clicked;
+            startControl.TetherClicked += startControl_TetherClicked;
+            dfuSuccessControl.ButtonClicked += dfuSuccessControl_ButtonClicked;
+            tetherSuccessControl.ButtonClicked += tetherSuccessControl_ButtonClicked;
+
             ShowStartPage();
         }
 
-        void startControl_CreateIPSW_43_8F191m_Clicked(object sender, EventArgs e)
+        private void startControl_CreateIPSW_fwVersion_Clicked(object sender, CreateIPSWFirmwareClickedEventArgs e)
         {
-            firmwareVersionModel.Version = FirmwareVersions.Version43_8F191m;
+            firmwareVersionModel.SelectedVersion = e.FirmwareVersion;
             DoDownload();
         }
 
-        void startControl_CreateIPSW_421_8C154_Clicked(object sender, EventArgs e)
-        {
-            firmwareVersionModel.Version = FirmwareVersions.Version421_8C154;
-            DoDownload();
-        }
-
-        void tetherSuccessControl_ButtonClicked(object sender, EventArgs e)
+        private void tetherSuccessControl_ButtonClicked(object sender, EventArgs e)
         {
             ShowStartPage();
         }
 
-        void dfuSuccessControl_ButtonClicked(object sender, EventArgs e)
+        private void dfuSuccessControl_ButtonClicked(object sender, EventArgs e)
         {
             ShowStartPage();
         }
 
-        void startControl_TetherClicked(object sender, EventArgs e)
+        private void StartTetherProcess()
+        {
+            view.ShowControl(tetherView);
+            tetherPresenter.StartProcess();
+        }
+
+        private void startControl_TetherClicked(object sender, EventArgs e)
         {
             var detectedVersion = firmwareVersionDetector.Version;
-            if (detectedVersion == FirmwareVersions.Unknown)
+            if (detectedVersion == null)
                 return;
 
-            firmwareVersionModel.Version = detectedVersion;
+            firmwareVersionModel.SelectedVersion = detectedVersion;
 
-            switch (detectedVersion)
-            {
-                case FirmwareVersions.Version43_8F191m:                    
-                    var tetherPresenter = new TetherPresenter(tetherModel, tetherView);
-                    tetherPresenter.ProcessFinished += new EventHandler(tetherPresenter_ProcessFinished);
-                    view.ShowControl(tetherView);
-                    tetherPresenter.StartProcess();
-                    break;
-                case FirmwareVersions.Version421_8C154:
-                    view.ShowTetherMessage();
-                    break;
-            }
+            if (detectedVersion.NeedTether)
+                StartTetherProcess();
+            else
+                view.ShowTetherMessage(detectedVersion.Folder);
         }
 
-        void tetherPresenter_ProcessFinished(object sender, EventArgs e)
+        private void tetherPresenter_ProcessFinished(object sender, EventArgs e)
         {
             view.ShowControl(tetherSuccessControl);
         }
 
         private void DoDownload()
         {
-            downloadPresenter = new DownloadPresenter(downloadModel, downloadView);
             downloadPresenter.SetFirmwareVersionModel(firmwareVersionModel);
-            downloadPresenter.ProcessFinished += new EventHandler(downloadPresenter_ProcessFinished);
             view.ShowControl(downloadView);
             downloadPresenter.StartProcess();
-
         }
 
-
-        void startControl_CreateIPSWClicked(object sender, CreateIPSWClickedEventArgs e)
+        private void startControl_CreateIPSWClicked(object sender, CreateIPSWClickedEventArgs e)
         {
             var fileName = e.FileName;
-
 
             if (!String.IsNullOrEmpty(fileName))
             {
                 firmwareVersionModel.CheckVersion(fileName);
 
-                if (firmwareVersionModel.Version == FirmwareVersions.Unknown)
+                if (firmwareVersionModel.SelectedVersion == null)
                     return;
                 firmwareVersionModel.ExistingFirmwarePath = fileName;
             }
 
             DoDownload();
-
-
         }
 
-        void downloadPresenter_ProcessFinished(object sender, EventArgs e)
+        private void downloadPresenter_ProcessFinished(object sender, EventArgs e)
         {
+            if (downloadPresenter.Result == DownloadPresenter.ProcessResult.Failed)
+            {
+                view.ShowDownloadFailedMessage();
+                ShowStartPage();
+                return;
+            }
+
             if (downloadPresenter.Result == DownloadPresenter.ProcessResult.Cancelled)
             {
                 ShowStartPage();
@@ -193,24 +188,18 @@ namespace Seas0nPass.Presenters
             }
 
             view.ShowControl(patchControl);
-            var presetner = new PatchPresenter(patchControl, patchModel);
-            presetner.Finished += new EventHandler(patchPresetner_Finished);
-
-            presetner.StartPatch();
-
+            patchPresetner.StartPatch();
         }
 
-        void patchPresetner_Finished(object sender, EventArgs e)
+        private void patchPresetner_Finished(object sender, EventArgs e)
         {
-            firmwareVersionDetector.SaveState(firmwareVersionModel.Version);
+            firmwareVersionDetector.SaveState(firmwareVersionModel.SelectedVersion);
 
             view.ShowControl(dfuControl);
-            var presenter = new DFUPresenter(dfuModel, dfuControl);
-            presenter.ProcessFinished += new EventHandler(dfuPresenter_ProcessFinished);
-            presenter.StartProcess();
+            dfuPresenter.StartProcess();
         }
 
-        void dfuPresenter_ProcessFinished(object sender, EventArgs e)
+        private void dfuPresenter_ProcessFinished(object sender, EventArgs e)
         {
             dfuSuccessControl.SetFileName(Path.GetFileName(firmwareVersionModel.PatchedFirmwarePath));
             view.ShowControl(dfuSuccessControl);

@@ -25,8 +25,6 @@ namespace Seas0nPass
             InitializeComponent();
         }
 
-        
-
         public void SetMessageText(string text)
         {
             Action action = delegate { this.label.Text = text; };
@@ -35,7 +33,6 @@ namespace Seas0nPass
                 Invoke(action);
             else
                 action();
-
         }
 
         public void UpdateProgress(int value)
@@ -51,11 +48,8 @@ namespace Seas0nPass
                 Invoke(action);
             else
                 action();
-
-            
         }
  
-
         public void Clear()
         {
             Action action = delegate { progressBar.Style = ProgressBarStyle.Marquee; label.Text = ""; };
@@ -63,9 +57,6 @@ namespace Seas0nPass
                 Invoke(action);
             else
                 action();
-
         }
-
-        
     }
 }

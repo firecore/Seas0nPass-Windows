@@ -15,7 +15,8 @@ namespace Seas0nPass.Interfaces
 {
     public interface IMainView
     {
+        void ShowDownloadFailedMessage();
         void ShowControl(IView control);
-        void ShowTetherMessage();
+        void ShowTetherMessage(string fwName);
     }
 }

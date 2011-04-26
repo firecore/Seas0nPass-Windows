@@ -1,4 +1,12 @@
-﻿using System;
+﻿////
+//
+//  Seas0nPass
+//
+//  Copyright 2011 FireCore, LLC. All rights reserved.
+//  http://firecore.com
+//
+////
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,72 +19,64 @@ namespace Seas0nPass.Models
     {
         public FirmwareVersionModel()
         {
-            Version = FirmwareVersions.Version43_8F191m;
+            InitBinaries();
+            InitVersionsList();
+            SelectedVersion = KnownVersions.OrderByDescending(x => x.Code).FirstOrDefault();
         }
-        public FirmwareVersions Version
-        {
-            get;
-            set;
-        }
+
+        public List<FirmwareVersion> KnownVersions { get; set; }
+        public FirmwareVersion SelectedVersion { get; set; }
 
         public void CheckVersion(string path)
         {
             var md5 = Utils.ComputeMD5(path);
-
-            if (md5 == Utils.CORRECT_FIRMWARE_421_8C154_MD5)
-                Version = FirmwareVersions.Version421_8C154;
-            else if (md5 == Utils.CORRECT_FIRMWARE_43_8F191m_MD5)
-                Version = FirmwareVersions.Version43_8F191m;
-            else Version = FirmwareVersions.Unknown;
-
+            SelectedVersion = KnownVersions.FirstOrDefault(x => x.MD5 == md5);
         }
 
-        private readonly string ORIGINAL_421_8C154 = "AppleTV2,1_4.2.1_8C154_Restore.ipsw";
-        private readonly string ORIGINAL_43_8F191m = "AppleTV2,1_4.3_8F191m_Restore.ipsw";
+        private string GetOriginalFileName()
+        {
+            if (SelectedVersion != null)
+                return SelectedVersion.OriginalFileName;
+            throw new InvalidOperationException("Unknown firmware version");
+        }
+
+        private string GetPatchedFirmwareName()
+        {
+            if (SelectedVersion != null)
+                return SelectedVersion.PatchedFileName;
+            throw new InvalidOperationException("Unknown firmware version");
+        }
+
+        private string GetFolderName()
+        {
+            if (SelectedVersion != null)
+                return SelectedVersion.Folder;
+            throw new InvalidOperationException("Unknown firmware version");
+        }
 
         private string DownloadedFirmwarePath
         {
             get
             {
-                return Path.Combine(
-                     Utils.DOCUMENTS_HOME, "Downloads",
-                     (Version == FirmwareVersions.Version421_8C154) ?
-                     ORIGINAL_421_8C154 : ORIGINAL_43_8F191m
-                 );
+                return Path.Combine(Utils.DOCUMENTS_HOME, "Downloads", GetOriginalFileName());
             }
         }
-
-        private readonly string PATCHED_421_8C154 = "AppleTV2,1_4.2.1_8C154_SP_Restore.ipsw";
-        private readonly string PATCHED_43_8F191m = "AppleTV2,1_4.3_8F191m_SP_Restore.ipsw";
 
         public string PatchedFirmwarePath
         {
             get
             {
-                return Path.Combine(
-                    Utils.DOCUMENTS_HOME,
-                    (Version == FirmwareVersions.Version421_8C154) ?
-                    PATCHED_421_8C154 : PATCHED_43_8F191m
-                );
+                return Path.Combine(Utils.DOCUMENTS_HOME, GetPatchedFirmwareName());
             }
         }
-
-        private readonly string FOLDER_421_8C154 = "AppleTV2,1_4.2.1_8C154";
-        private readonly string FOLDER_43_8F191m = "AppleTV2,1_4.3_8F5166b";
 
         public string AppDataFolder
         {
             get
             {
-                return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SeanOnPass",
-                    (Version == FirmwareVersions.Version421_8C154) ?
-                    FOLDER_421_8C154 : FOLDER_43_8F191m
-            );
-
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Seas0nPass", GetFolderName());
             }
         }
-
 
         private string customFileLocation;
 
@@ -96,27 +96,61 @@ namespace Seas0nPass.Models
         {
             get
             {
-                return (Version == FirmwareVersions.Version421_8C154) ?
-                Utils.CORRECT_FIRMWARE_421_8C154_MD5 : Utils.CORRECT_FIRMWARE_43_8F191m_MD5;
+                if (SelectedVersion != null)
+                    return SelectedVersion.MD5;
+                throw new InvalidOperationException("Unknown firmware version");
             }
+
         }
 
-        public string DownloadUri 
+        public string DownloadUri
         {
             get
             {
-                return (Version == FirmwareVersions.Version421_8C154) ? 
-                    Seas0nPass.ScriptResource.firmware_421_8C154_Url : Seas0nPass.ScriptResource.firmware_43_8F191m_Url;
+                if (SelectedVersion != null)
+                    return SelectedVersion.DownloadUrl;
+                throw new InvalidOperationException("Unknown firmware version");
             }
         }
 
+        private void InitVersionsList()
+        {
+            KnownVersions = new List<FirmwareVersion>();
+            string[] directories = Directory.GetDirectories(Utils.PATCHES_DIRECTORY);
+            foreach (var dir in directories)
+            {
+                string commandsPath = Path.Combine(dir+@"\", Utils.COMMANDS_FILE_NAME);
+                FirmwareVersion version = GetFirmwareVersion(commandsPath);
+                KnownVersions.Add(version);
+            }
+        }
 
+        private FirmwareVersion GetFirmwareVersion(string commandsPath)
+        {
+            using (var sr = new StreamReader(commandsPath))
+            {
+                var vars = new Dictionary<string, string>();
+                string commandsText = sr.ReadToEnd();
+                UniversalPatch.GetVariables(vars, commandsText);
+                return new FirmwareVersion()
+                {
+                    Code = vars["$fw_code"],
+                    Name = vars["$name"],
+                    MD5 = vars["$md5"],
+                    OriginalFileName = vars["$orig_filename"],
+                    PatchedFileName = vars["$patched_filename"],
+                    Folder = vars["$folder"],
+                    DownloadUrl = vars["$downUrl"],
+                    NeedTether = bool.Parse(vars["$needTether"]),
+                    CommandsText = commandsText
+                };
+            }
+        }
 
-
-
-        public void InitBinaries()
+        private void InitBinaries()
         {
             var resource = Seas0nPass.ScriptResource.Binaries;
+            Utils.RecreateDirectory(Utils.WORKING_FOLDER); 
             ArchiveUtils.GetViaZipInput(new MemoryStream(resource), Utils.WORKING_FOLDER);
         }
     }

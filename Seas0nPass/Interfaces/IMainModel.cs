@@ -15,7 +15,6 @@ namespace Seas0nPass.Interfaces
 {
     public interface IMainModel
     {
-        void InitWorkingFolder();
         bool IsTetherPossible();
         void SetFirmwareVersionModel(IFirmwareVersionModel firmwareVersionModel);
     }

@@ -21,25 +21,44 @@ namespace Seas0nPass.Models
 {
     public class DFUModel : IDFUModel
     {
+        public event EventHandler ProcessFinished;
+        public event EventHandler CurrentMessageChanged;
+        public event EventHandler ProgressChanged;
 
         private string currentMessage;
+        public string CurrentMessage
+        {
+            get { return currentMessage; }
+        }
+
+        private int progressPercentage;
+        public int ProgressPercentage
+        {
+            get { return progressPercentage; }
+        }
+
+        private IFirmwareVersionModel firmwareVersionModel;
+        public void SetFirmwareVersionModel(IFirmwareVersionModel firmwareVersionModel)
+        {
+            this.firmwareVersionModel = firmwareVersionModel;
+        }
 
         public void StartProcess()
         {
             var worker = new BackgroundWorker();
-            worker.DoWork += new DoWorkEventHandler(worker_DoWork);
-            worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
+            worker.DoWork += worker_DoWork;
+            worker.RunWorkerCompleted += worker_RunWorkerCompleted;
 
             worker.RunWorkerAsync();
         }
 
-        void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (ProcessFinished != null)
                 ProcessFinished(sender, e);
         }
 
-        void worker_DoWork(object sender, DoWorkEventArgs e)
+        private void worker_DoWork(object sender, DoWorkEventArgs e)
         {
             RunDFU();
         }
@@ -71,12 +90,9 @@ namespace Seas0nPass.Models
             p.OutputDataReceived +=new DataReceivedEventHandler((sender, e) => HandleOutputData(e.Data));
             p.ErrorDataReceived += new DataReceivedEventHandler((sender, e) => HandleOutputData(e.Data));
                         
-            
             p.Start();
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
-
-            
 
             p.WaitForExit();
             if (p.ExitCode != 0)
@@ -85,8 +101,6 @@ namespace Seas0nPass.Models
                 LogUtil.LogEvent(errorString);
                 throw new InvalidOperationException(errorString);
             }
-
-             
         }
 
         public void HandleOutputData(string data)
@@ -98,7 +112,6 @@ namespace Seas0nPass.Models
 
             if (data.StartsWith("::"))
             {
-
                 currentMessage = data.Substring(2);
                 if (CurrentMessageChanged != null)
                     CurrentMessageChanged(this, EventArgs.Empty);
@@ -113,42 +126,6 @@ namespace Seas0nPass.Models
                 if (ProgressChanged != null)
                     ProgressChanged(this, EventArgs.Empty);
             }
-
         }
-
-
-
-        public event EventHandler ProcessFinished;
-
-
-
-        
-
-
-        public string CurrentMessage
-        {
-            get { return currentMessage; }
-        }        
-
-        public event EventHandler CurrentMessageChanged;
-
-        private int progressPercentage;
-
-        public int ProgressPercentage
-        {
-            get { return progressPercentage; }
-        }
-
-        public event EventHandler ProgressChanged;
-
-        private IFirmwareVersionModel firmwareVersionModel;
-
-        public void SetFirmwareVersionModel(IFirmwareVersionModel firmwareVersionModel)
-        {
-            this.firmwareVersionModel = firmwareVersionModel;
-        }
-
-
-
     }
 }

@@ -25,12 +25,21 @@ namespace Seas0nPass
             InitializeComponent();
         }
 
-        public void ShowTetherMessage()
+        public void ShowDownloadFailedMessage()
         {
-            MessageBox.Show("The AppleTV2,1_4.2.1_8C154 firmware is untethered and does not require this process!", "Untethered Jailbreak");
+            MessageBox.Show(
+                text: "Unable to download firmware. Please check your internet connection or firewall settings and try again.",
+                caption: "Seas0nPass",
+                buttons: MessageBoxButtons.OK,
+                icon: MessageBoxIcon.Exclamation
+            );
         }
 
-              
+        public void ShowTetherMessage(string fwName)
+        {
+            MessageBox.Show(string.Format("The {0} firmware is untethered and does not require this process!", fwName),
+                "Untethered Jailbreak");
+        }
 
         public void ShowControl(IView control)
         {
@@ -46,7 +55,5 @@ namespace Seas0nPass
             else
                 action();
         }
-       
-        
     }
 }

@@ -20,12 +20,12 @@ namespace Seas0nPass
 {
     public partial class PatchControl : UserControl, IPatchView
     {
+        public event EventHandler ActionButtonClicked;
+
         public PatchControl()
         {
             InitializeComponent();
         }
-
-        
 
         public void SetMessageText(string text)
         {
@@ -34,7 +34,6 @@ namespace Seas0nPass
                 Invoke(action);
             else
                 action();
-
         }
 
         public void UpdateProgress(int value)
@@ -45,18 +44,13 @@ namespace Seas0nPass
                 Invoke(action);
             else
                 action();
-
-            
         }
-
-        public event EventHandler ActionButtonClicked;
 
         private void actionButton_Click(object sender, EventArgs e)
         {
             if (ActionButtonClicked != null)
                 ActionButtonClicked(sender, e);
         }      
-
 
         public void SetActionButtonText(string text)
         {
@@ -66,9 +60,6 @@ namespace Seas0nPass
                 Invoke(action);
             else
                 action();
-
         }
-
-        
     }
 }

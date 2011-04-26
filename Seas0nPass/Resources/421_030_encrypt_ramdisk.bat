@@ -1,1 +1,0 @@
-.\bin\xpwntool.exe .\tmp\our.dmg .\output\038-0318-001.dmg -iv 7c256102d0580b960213540965618b5b -k 5d4e967158ab75ba27ec281bff4e714dacc88123ea4913ae2bee6a719c15496c -t .\UNZIPPED_ORIGINAL\038-0318-001.dmg 

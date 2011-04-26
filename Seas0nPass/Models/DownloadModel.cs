@@ -22,12 +22,23 @@ namespace Seas0nPass.Models
 {
     public class DownloadModel : IDownloadModel
     {
-        private int percentage;
-        private WebClient webClient = new WebClient();
-
         private readonly string fileName = Path.Combine(Utils.WORKING_FOLDER, Utils.DOWNLOADED_FILE_PATH);
+        private readonly WebClient webClient;
+        private IFirmwareVersionModel firmwareVersionModel;
 
-        
+        public event EventHandler ProgressChanged;
+        public event EventHandler DownloadCompleted;
+        public event EventHandler DownloadFailed;
+        public event EventHandler DownloadCanceled;
+
+        public int Percentage { get; private set; }
+
+        public DownloadModel()
+        {
+            webClient = new WebClient();
+            webClient.DownloadProgressChanged += webClient_DownloadProgressChanged;
+            webClient.DownloadFileCompleted += webClient_DownloadFileCompleted;
+        }
 
         private void PerformStart()
         {
@@ -37,15 +48,13 @@ namespace Seas0nPass.Models
                 LogUtil.LogEvent("Original firmware found on disk");
 
                 File.Copy(firmwareVersionModel.ExistingFirmwarePath, Path.Combine(Utils.WORKING_FOLDER, Utils.DOWNLOADED_FILE_PATH), true);
-                if (DownloadFinished != null)
-                    DownloadFinished(this, EventArgs.Empty);
+                if (DownloadCompleted != null)
+                    DownloadCompleted(this, EventArgs.Empty);
                 return;
             }
 
             LogUtil.LogEvent("Starting download");
 
-            webClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(webClient_DownloadProgressChanged);
-            webClient.DownloadFileCompleted += new System.ComponentModel.AsyncCompletedEventHandler(webClient_DownloadFileCompleted);
             webClient.DownloadFileAsync(new Uri(firmwareVersionModel.DownloadUri), fileName);
         }
 
@@ -56,39 +65,50 @@ namespace Seas0nPass.Models
             worker.RunWorkerAsync();
         }
 
-
-        void webClient_DownloadFileCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e)
+        private void webClient_DownloadFileCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e)
         {
+            if (e.Error != null)
+            {
+                LogUtil.LogEvent(string.Format("Download failed:\n{0}", e.Error));
+
+                Percentage = 0;
+                if (ProgressChanged != null)
+                    ProgressChanged(sender, e);
+
+                if (!e.Cancelled)
+                {
+                    if (DownloadFailed != null)
+                        DownloadFailed(sender, e);
+                    return;
+                }
+                else
+                {
+                    LogUtil.LogEvent("Download was cancelled by the user");
+                    if (DownloadCanceled != null)
+                        DownloadCanceled(sender, e);
+                    return;
+                }
+            }
+
             LogUtil.LogEvent("Download completed");
 
             File.Copy(Path.Combine(Utils.WORKING_FOLDER, Utils.DOWNLOADED_FILE_PATH), firmwareVersionModel.ExistingFirmwarePath, true);
 
             LogUtil.LogEvent("Downloaded file copied to Documents folder");
 
-            if (DownloadFinished != null)
-                DownloadFinished(sender, e);
+            if (DownloadCompleted != null)
+                DownloadCompleted(sender, e);
         }
 
-        void webClient_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
+        private void webClient_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
         {
             if (ProgressChanged != null)
             {
-                percentage = e.ProgressPercentage;
+                Percentage = e.ProgressPercentage;
                 ProgressChanged(sender, e);
             }
 
         }
-
-        public event EventHandler ProgressChanged;
-
-        public event EventHandler DownloadFinished;
-        
-
-        public int Percentage
-        {
-            get { return percentage; }
-        }
-        
 
         public void CancelDownload()
         {
@@ -100,12 +120,7 @@ namespace Seas0nPass.Models
             }
             if (File.Exists(fileName))
                 File.Delete(fileName);
-
-
         }
-
-
-        private IFirmwareVersionModel firmwareVersionModel;
 
         public void SetFirmwareVersionModel(IFirmwareVersionModel firmwareVersionModel)
         {

@@ -1,1 +1,0 @@
-.\bin\vfdecrypt -i .\UNZIPPED_ORIGINAL\038-0316-001.dmg -k 5407d28e075f5a2e06fddb7ad00123aa5a528bd6c2850d5fa0908a4dcae7dd3e00a9cdb2 -o ipsw/038-0316-001.dmg

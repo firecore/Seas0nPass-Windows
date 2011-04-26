@@ -23,7 +23,7 @@ namespace Seas0nPass
         {
             Trace.AutoFlush = true;
             Trace.Listeners.Clear();
-            Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Utils.DOCUMENTS_HOME, "SeasOnPass.log")));
+            Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Utils.DOCUMENTS_HOME, "Seas0nPass.log")));
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;        
         }

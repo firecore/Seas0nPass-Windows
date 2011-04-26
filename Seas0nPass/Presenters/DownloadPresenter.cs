@@ -20,7 +20,8 @@ namespace Seas0nPass.Presenters
         public enum ProcessResult
         {
             Completed,
-            Cancelled
+            Cancelled,
+            Failed
         }
 
         private ProcessResult result = ProcessResult.Completed;
@@ -46,13 +47,30 @@ namespace Seas0nPass.Presenters
             this.model = model;
             this.view = view;
 
-            model.ProgressChanged += new EventHandler(model_ProgressChanged);
-            view.ActionButtonClicked += new EventHandler(view_ActionButtonClicked);
-            model.DownloadFinished += new EventHandler(model_DownloadFinished);
+            model.ProgressChanged += model_ProgressChanged;
+            view.ActionButtonClicked += view_ActionButtonClicked;
+            model.DownloadCompleted += model_DownloadFinished;
+            model.DownloadFailed += model_DownloadFailed;
+            model.DownloadCanceled += model_DownloadCanceled;
         }
 
-        void model_DownloadFinished(object sender, EventArgs e)
+        private void model_DownloadFailed(object sender, EventArgs e)
         {
+            result = ProcessResult.Failed;
+            if (ProcessFinished != null)
+                ProcessFinished(sender, e);
+        }
+
+        private void model_DownloadFinished(object sender, EventArgs e)
+        {
+            result = ProcessResult.Completed;
+            if (ProcessFinished != null)
+                ProcessFinished(sender, e);
+        }
+
+        private void model_DownloadCanceled(object sender, EventArgs e)
+        {
+            result = ProcessResult.Cancelled;
             if (ProcessFinished != null)
                 ProcessFinished(sender, e);
         }
@@ -64,13 +82,12 @@ namespace Seas0nPass.Presenters
             model.StartDownload();
         }
 
-        void view_ActionButtonClicked(object sender, EventArgs e)
+        private void view_ActionButtonClicked(object sender, EventArgs e)
         {
-            result = ProcessResult.Cancelled;
             model.CancelDownload();
         }
 
-        void model_ProgressChanged(object sender, EventArgs e)
+        private void model_ProgressChanged(object sender, EventArgs e)
         {
             view.UpdateProgress(model.Percentage);
         }

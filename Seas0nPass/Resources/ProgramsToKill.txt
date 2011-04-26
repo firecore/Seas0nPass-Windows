@@ -1,0 +1,8 @@
+﻿bspatch
+dfu
+dmg-bin
+hdutil
+hfsplus
+tether
+vfdecrypt
+xpwntool

@@ -17,18 +17,10 @@ namespace Seas0nPass.Models
 {
     public class MainModel : IMainModel
     {
-        
-
-        public void InitWorkingFolder()
-        {
-            Utils.RecreateDirectory(Utils.WORKING_FOLDER);            
-        }
-
         public bool IsTetherPossible()
         {
             return File.Exists(Path.Combine(firmwareVersionModel.AppDataFolder, Utils.KERNEL_CACHE_FILE_NAME)) &&
                    File.Exists(Path.Combine(firmwareVersionModel.AppDataFolder, Utils.IBSS_FILE_NAME));
-
         }
 
         private IFirmwareVersionModel firmwareVersionModel;
@@ -37,7 +29,5 @@ namespace Seas0nPass.Models
         {
             this.firmwareVersionModel = firmwareVersionModel;
         }
-
-        
     }
 }

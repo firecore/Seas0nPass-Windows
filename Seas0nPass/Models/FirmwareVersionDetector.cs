@@ -1,4 +1,12 @@
-﻿using System;
+﻿////
+//
+//  Seas0nPass
+//
+//  Copyright 2011 FireCore, LLC. All rights reserved.
+//  http://firecore.com
+//
+////
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,30 +18,35 @@ namespace Seas0nPass.Models
 {
     public class FirmwareVersionDetector : IFirmwareVersionDetector
     {
-        private readonly string fileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SeanOnPass", "version.xml");
+        private readonly XmlSerializer _xmlSerializer = new XmlSerializer(typeof(FirmwareVersion));
+        private readonly string fileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Seas0nPass", "version.xml");
 
-        public FirmwareVersions Version
+        public FirmwareVersion Version
         {
             get
             {
-                if (!File.Exists(fileName)) 
-                    return FirmwareVersions.Unknown;
+                if (!File.Exists(fileName))
+                    return null;
                 try
                 {
                     using (var fileStream = new FileStream(fileName, FileMode.Open))
-                        return (FirmwareVersions)new XmlSerializer(typeof(FirmwareVersions)).Deserialize(fileStream);
+                    {
+                        return (FirmwareVersion)_xmlSerializer.Deserialize(fileStream);
+                    }
                 }
                 catch (InvalidOperationException)
                 {
-                    return FirmwareVersions.Unknown;
+                    return null;
                 }
             }
         }
 
-        public void SaveState(FirmwareVersions version)
+        public void SaveState(FirmwareVersion version)
         {
             using (var fileStream = new FileStream(fileName, FileMode.Create))
-                new XmlSerializer(typeof(FirmwareVersions)).Serialize(fileStream, version);
+            {
+                _xmlSerializer.Serialize(fileStream, version);
+            }
         }
     }
 }

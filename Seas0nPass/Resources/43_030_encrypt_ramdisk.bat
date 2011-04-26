@@ -1,1 +1,0 @@
-.\bin\xpwntool.exe .\tmp\our.dmg .\output\038-0791-023.dmg -t .\UNZIPPED_ORIGINAL\038-0791-023.dmg

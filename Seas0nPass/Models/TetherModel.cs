@@ -60,8 +60,6 @@ namespace Seas0nPass.Models
         private void RunTether()
         {
 
-            firmwareVersionModel.InitBinaries();
-
             RestoreDFUAndTetherFiles();
 
             Directory.SetCurrentDirectory(Utils.BIN_DIRECTORY);
