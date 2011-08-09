@@ -58,7 +58,20 @@ namespace Seas0nPass
         public static void RecreateDirectory(string dirPath)
         {
             if (Directory.Exists(dirPath))
-                Directory.Delete(dirPath, true);            
+            {
+                try
+                {
+                    Directory.Delete(dirPath, true);
+                }
+                catch (IOException ex)
+                {
+                    LogUtil.LogException(ex);
+                    if (Directory.EnumerateFiles(dirPath).Any())
+                        throw;
+                    else
+                        return; // Can't delete dir, but it is empty => skip it
+                }
+            }
             Directory.CreateDirectory(dirPath);
         }
 

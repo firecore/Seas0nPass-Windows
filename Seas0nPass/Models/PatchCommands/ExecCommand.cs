@@ -19,8 +19,7 @@ namespace Seas0nPass.Models.PatchCommands
     {
         public ExecCommand()
             : base("exec")
-        {
-        }
+        { }            
 
         public override ICommandResult Execute(IDictionary<string, string> vars, params string[] args)
         {

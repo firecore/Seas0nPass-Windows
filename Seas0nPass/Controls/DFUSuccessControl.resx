@@ -2407,13 +2407,4 @@
         geBAkgjXi/XXCzVVUwYYYIABBhhggAEGGGCAAQb2NfB/SD4PV4XHJt8AAAAASUVORK5CYII=
 </value>
   </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>Successfully entered DFU mode!
-
-Follow these steps to restore the custom firmware to the AppleTV.
-
-1. Open iTunes and select the AppleTV from the sidebar.
-2. Hold down 'Shift' and click the 'Restore' button.
-3. Select the {0} file located in My Documents.</value>
-  </data>
 </root>

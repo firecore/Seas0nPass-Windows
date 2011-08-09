@@ -15,8 +15,12 @@ namespace Seas0nPass.Interfaces
 {
     public interface IMainView
     {
+        bool ConfirmITunesAutomation();
         void ShowDownloadFailedMessage();
         void ShowControl(IView control);
         void ShowTetherMessage(string fwName);
+        void ShowNotEnoughFreeSpaceMessage();
+        void ShowManualRestoreInstructions(string fileName);
+        void ShowCompatibleITunesVersionIsNotInstalled(string requiredITunesVersion, string installedITunesVersion);
     }
 }

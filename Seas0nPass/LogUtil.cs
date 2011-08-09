@@ -20,7 +20,7 @@ namespace Seas0nPass
     public static class LogUtil
     {
         public static void Init()
-        {
+        {            
             Trace.AutoFlush = true;
             Trace.Listeners.Clear();
             Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Utils.DOCUMENTS_HOME, "Seas0nPass.log")));

@@ -20,9 +20,14 @@ namespace Seas0nPass
 {
     public partial class DFUControl : UserControl, IDFUView
     {
+        private readonly Image dfuImage;
+        private readonly Image iTVimage;
         public DFUControl()
         {
             InitializeComponent();
+            dfuImage = pictureBox1.BackgroundImage;
+            iTVimage = pictureBox1.Image;
+            pictureBox1.Image = null;
         }
 
         public void SetMessageText(string text)
@@ -57,6 +62,27 @@ namespace Seas0nPass
                 Invoke(action);
             else
                 action();
+        }
+
+        public bool HintVisibility
+        {
+            get
+            { 
+               return hintLabel.Visible;
+
+            }
+            set
+            {
+                Action impl = () =>
+                {
+                    hintLabel.Visible = value;
+                    pictureBox1.BackgroundImage = value ? dfuImage : iTVimage;
+                };
+                if (InvokeRequired)
+                    Invoke(impl);
+                else
+                    impl();
+            }
         }
     }
 }

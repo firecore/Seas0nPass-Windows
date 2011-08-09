@@ -13,6 +13,7 @@ using System.Text;
 using Seas0nPass.Interfaces;
 using Seas0nPass.CustomEventArgs;
 using System.IO;
+using System.Threading;
 
 namespace Seas0nPass.Presenters
 {
@@ -45,10 +46,17 @@ namespace Seas0nPass.Presenters
 
         private ITetherView tetherView;
         private ITetherModel tetherModel;
+        private IITunesAutomationModel iTunesAutomationModel;
+
+
+        private IFreeSpaceModel freeSpaceModel;
+        private IITunesInfoProvider iTunesInfoProvider;
+        private SynchronizationContext syncContext;
 
         private void InstantiateModelsAndViews()
         {
             startControl = IoC.Resolve<IStartView>();
+            syncContext = startControl.SyncContext;
             downloadModel = IoC.Resolve<IDownloadModel>();
             downloadView = IoC.Resolve<IDownloadView>();
             patchControl = IoC.Resolve<IPatchView>();
@@ -62,6 +70,13 @@ namespace Seas0nPass.Presenters
             tetherView = IoC.Resolve<ITetherView>();
             tetherModel = IoC.Resolve<ITetherModel>();
             firmwareVersionDetector = IoC.Resolve<IFirmwareVersionDetector>();
+            freeSpaceModel = IoC.Resolve<IFreeSpaceModel>();
+            iTunesInfoProvider = IoC.Resolve<IITunesInfoProvider>();
+
+            iTunesAutomationModel = IoC.Resolve<IITunesAutomationModel>();
+            iTunesAutomationModel.FirmwareVersionModel = firmwareVersionModel;
+            iTunesAutomationModel.SyncContext = syncContext;
+            iTunesAutomationModel.ITunesInfoProvider = iTunesInfoProvider;
 
             mainModel.SetFirmwareVersionModel(firmwareVersionModel);
             downloadModel.SetFirmwareVersionModel(firmwareVersionModel);
@@ -93,9 +108,16 @@ namespace Seas0nPass.Presenters
             view.ShowControl(startControl);
         }
 
-        public void Init()
+        public bool Init()
         {
             InstantiateModelsAndViews();
+
+            ITunesInfo iTunesInfo = iTunesInfoProvider.CheckITunesVersion();
+            if (!iTunesInfo.IsCompatible)
+            {
+                view.ShowCompatibleITunesVersionIsNotInstalled(iTunesInfo.RequiredVersion, iTunesInfo.InstalledVersion);
+                return false;
+            }
 
             startControl.InitFirmwaresList(firmwareVersionModel.KnownVersions.ToArray());
 
@@ -104,12 +126,18 @@ namespace Seas0nPass.Presenters
             startControl.TetherClicked += startControl_TetherClicked;
             dfuSuccessControl.ButtonClicked += dfuSuccessControl_ButtonClicked;
             tetherSuccessControl.ButtonClicked += tetherSuccessControl_ButtonClicked;
-
             ShowStartPage();
+            return true;
         }
 
         private void startControl_CreateIPSW_fwVersion_Clicked(object sender, CreateIPSWFirmwareClickedEventArgs e)
         {
+            if (!freeSpaceModel.IsEnoughFreeSpace())
+            {
+                view.ShowNotEnoughFreeSpaceMessage();
+                return;
+            }
+
             firmwareVersionModel.SelectedVersion = e.FirmwareVersion;
             DoDownload();
         }
@@ -158,6 +186,12 @@ namespace Seas0nPass.Presenters
 
         private void startControl_CreateIPSWClicked(object sender, CreateIPSWClickedEventArgs e)
         {
+            if (!freeSpaceModel.IsEnoughFreeSpace())
+            {
+                view.ShowNotEnoughFreeSpaceMessage();
+                return;
+            }
+
             var fileName = e.FileName;
 
             if (!String.IsNullOrEmpty(fileName))
@@ -201,8 +235,15 @@ namespace Seas0nPass.Presenters
 
         private void dfuPresenter_ProcessFinished(object sender, EventArgs e)
         {
-            dfuSuccessControl.SetFileName(Path.GetFileName(firmwareVersionModel.PatchedFirmwarePath));
             view.ShowControl(dfuSuccessControl);
+
+            if (view.ConfirmITunesAutomation())
+                iTunesAutomationModel.Run();
+            else
+            {
+                Utils.OpenExplorerWindow(firmwareVersionModel.PatchedFirmwarePath);
+                view.ShowManualRestoreInstructions(Path.GetFileName(firmwareVersionModel.PatchedFirmwarePath));
+            }
         }
     }
 }

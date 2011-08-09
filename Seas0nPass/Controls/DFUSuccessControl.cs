@@ -35,19 +35,6 @@ namespace Seas0nPass.Controls
         {
             if (ButtonClicked != null)
                 ButtonClicked(sender, e);
-        }
-
-        public void SetFileName(string fileName)
-        {
-            Action action = delegate
-            {
-                this.label1.Text = string.Format(successMessage, fileName);
-            };
-
-            if (InvokeRequired)
-                Invoke(action);
-            else
-                action();
-        }
+        }       
     }
 }

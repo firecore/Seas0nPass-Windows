@@ -46,11 +46,14 @@ namespace Seas0nPass.Presenters
 
         void model_CurrentMessageChanged(object sender, EventArgs e)
         {
+            if (model.CurrentMessage == "Found device in DFU mode...")            
+                view.HintVisibility = false;            
             view.SetMessageText(model.CurrentMessage);
         }
 
         public void StartProcess()
         {
+            view.HintVisibility = true;            
             model.StartProcess();
         }
     }

@@ -15,7 +15,6 @@ namespace Seas0nPass.Interfaces
 {
     public interface IDFUSuccessControl : IView
     {
-        event EventHandler ButtonClicked;
-        void SetFileName(string fileName);
+        event EventHandler ButtonClicked;       
     }
 }

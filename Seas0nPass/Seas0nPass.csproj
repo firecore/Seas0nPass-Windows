@@ -33,6 +33,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Seas0nPass.ico</ApplicationIcon>
@@ -43,18 +44,21 @@
   <ItemGroup>
     <Reference Include="ICSharpCode.SharpZipLib">
       <HintPath>..\libs\ICSharpCode.SharpZipLib.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="UIAutomationClient" />
+    <Reference Include="UIAutomationTypes" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArchiveUtils.cs" />
@@ -96,9 +100,12 @@
     </Compile>
     <Compile Include="CustomEventArgs\CreateIPSWClickedEventArgs.cs" />
     <Compile Include="CustomEventArgs\CreateIPSWFirmwareClickedEventArgs.cs" />
-    <Compile Include="FirmwareVersions.cs" />
+    <Compile Include="HookResolver.cs" />
     <Compile Include="Interfaces\IFirmwareVersionDetector.cs" />
     <Compile Include="Interfaces\IFirmwareVersionModel.cs" />
+    <Compile Include="Interfaces\IITunesAutomationModel.cs" />
+    <Compile Include="Interfaces\IFreeSpaceModel.cs" />
+    <Compile Include="Interfaces\IITunesInfoProvider.cs" />
     <Compile Include="Interfaces\IMainModel.cs" />
     <Compile Include="Interfaces\ITetherModel.cs" />
     <Compile Include="Interfaces\ITetherSuccessControl.cs" />
@@ -112,6 +119,7 @@
     <Compile Include="Interfaces\IPatchView.cs" />
     <Compile Include="Interfaces\IStartView.cs" />
     <Compile Include="Interfaces\ITetherView.cs" />
+    <Compile Include="Interfaces\ITunesInfo.cs" />
     <Compile Include="Interfaces\IView.cs" />
     <Compile Include="IoC.cs" />
     <Compile Include="LogUtil.cs" />
@@ -129,6 +137,9 @@
     </Compile>
     <Compile Include="Models\FirmwareVersion.cs" />
     <Compile Include="Models\FirmwareVersionDetector.cs" />
+    <Compile Include="Models\ITunesAutomationModel.cs" />
+    <Compile Include="Models\FreeSpaceModel.cs" />
+    <Compile Include="Models\ITunesInfoProvider.cs" />
     <Compile Include="Models\PatchCommandException.cs" />
     <Compile Include="Models\PatchCommands\CommandResult.cs" />
     <Compile Include="Models\PatchCommands\CommentCommand.cs" />
@@ -221,10 +232,11 @@
     <None Include="Resources\Binaries.zip" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\ICSharpCode.SharpZipLib.dll" />
+    <None Include="Resources\iTV.png" />
     <Content Include="Resources\ProgramsToKill.txt" />
     <Content Include="Seas0nPass.ico" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

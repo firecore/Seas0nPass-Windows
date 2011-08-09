@@ -15,6 +15,7 @@ namespace Seas0nPass.Interfaces
 {
     public interface IDFUView : IView
     {
+        bool HintVisibility { get; set; }
         void UpdateProgress(int value);
         void SetMessageText(string text);
         void Clear();

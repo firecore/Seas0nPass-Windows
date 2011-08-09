@@ -83,10 +83,17 @@ namespace Seas0nPass.Models
 
             Utils.RecreateDirectory(firmwareVersionModel.AppDataFolder);
 
+            LogUtil.LogEvent(string.Format("Directory {0} recreated successfully", firmwareVersionModel.AppDataFolder));
+
             File.Copy(Path.Combine(Utils.WORKING_FOLDER, Utils.OUTPUT_FOLDER_NAME, Utils.KERNEL_CACHE_FILE_NAME),
                       Path.Combine(firmwareVersionModel.AppDataFolder, Utils.KERNEL_CACHE_FILE_NAME), true);
+
+            LogUtil.LogEvent(string.Format("{0} file copied successfully", Utils.KERNEL_CACHE_FILE_NAME));
+
             File.Copy(Path.Combine(Utils.WORKING_FOLDER, Utils.OUTPUT_FOLDER_NAME, Utils.FIRMWARE_FOLDER_NAME, Utils.DFU_FOLDER_NAME, Utils.IBSS_FILE_NAME),
                       Path.Combine(firmwareVersionModel.AppDataFolder, Utils.IBSS_FILE_NAME), true);
+
+            LogUtil.LogEvent(string.Format("{0} file copied successfully", Utils.IBSS_FILE_NAME));
         }
 
         private IPatch GetPatch()
@@ -95,6 +102,8 @@ namespace Seas0nPass.Models
                 return new UniversalPatch(firmwareVersionModel.SelectedVersion.CommandsText);
             throw new InvalidOperationException("Unknown firmware version");
         }
+
+     
 
         private void PerformPatch()
         {
@@ -111,9 +120,7 @@ namespace Seas0nPass.Models
 
             SaveDFUAndTetherFiles();
 
-            File.Copy(resultFile, firmwareVersionModel.PatchedFirmwarePath, true);
-
-            Utils.OpenExplorerWindow(firmwareVersionModel.PatchedFirmwarePath);
+            File.Copy(resultFile, firmwareVersionModel.PatchedFirmwarePath, true);           
 
             if (Finished != null)
                 Finished(this, EventArgs.Empty);

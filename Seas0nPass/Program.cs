@@ -24,6 +24,8 @@ namespace Seas0nPass
         [STAThread]
         static void Main()
         {
+            new HookResolver();
+
             InitDocumentsHome();
 
             LogUtil.Init();
@@ -36,8 +38,10 @@ namespace Seas0nPass
             Application.SetCompatibleTextRenderingDefault(false);
             var form = new MainForm();
             var mainPresenter = new MainPresenter(form);
-            mainPresenter.Init();
-            Application.Run(form);
+            if (mainPresenter.Init())
+            {
+                Application.Run(form);
+            }
         }
 
         private static void InitDocumentsHome()

@@ -34,7 +34,7 @@
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.actionButton = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.hintLabel = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -47,7 +47,7 @@
             this.tableLayoutPanel1.Controls.Add(this.progressBar, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.actionButton, 0, 5);
             this.tableLayoutPanel1.Controls.Add(this.pictureBox1, 0, 4);
-            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.hintLabel, 0, 3);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -98,22 +98,23 @@
             this.pictureBox1.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("pictureBox1.BackgroundImage")));
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pictureBox1.Image = global::Seas0nPass.Properties.Resources.iTV;
             this.pictureBox1.Location = new System.Drawing.Point(3, 83);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(550, 137);
             this.pictureBox1.TabIndex = 4;
             this.pictureBox1.TabStop = false;
             // 
-            // label1
+            // hintLabel
             // 
-            this.label1.AutoSize = true;
-            this.label1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.label1.Location = new System.Drawing.Point(3, 60);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(550, 13);
-            this.label1.TabIndex = 5;
-            this.label1.Text = "Connect USB and then press and hold MENU and PLAY/PAUSE for 7 seconds.";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.hintLabel.AutoSize = true;
+            this.hintLabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.hintLabel.Location = new System.Drawing.Point(3, 60);
+            this.hintLabel.Name = "hintLabel";
+            this.hintLabel.Size = new System.Drawing.Size(550, 13);
+            this.hintLabel.TabIndex = 5;
+            this.hintLabel.Text = "Connect USB and then press and hold MENU and PLAY/PAUSE for 7 seconds.";
+            this.hintLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // DFUControl
             // 
@@ -136,6 +137,6 @@
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Button actionButton;
         private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label hintLabel;
     }
 }

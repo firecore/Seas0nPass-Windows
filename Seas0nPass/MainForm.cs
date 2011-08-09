@@ -25,20 +25,108 @@ namespace Seas0nPass
             InitializeComponent();
         }
 
+        public void ShowCompatibleITunesVersionIsNotInstalled(string requiredITunesVersion, string installedITunesVersion)
+        {
+            if (InvokeRequired)
+            {
+                Invoke((Action)(() => ShowCompatibleITunesVersionIsNotInstalled(requiredITunesVersion, installedITunesVersion)));
+            }
+            else
+            {
+                string messageText = string.IsNullOrEmpty(installedITunesVersion) ?
+                    string.Format("Seas0nPass requires iTunes version {0} or later. " +
+                                    "Please install the latest iTunes version from the Apple website (www.apple.com).",
+                                    requiredITunesVersion)
+                    : string.Format("Seas0nPass requires iTunes version {0} or later. " +
+                                    "You have iTunes version {1} installed. " +
+                                    "Please open Help -> Check For Updates in iTunes to install a more recent version.",
+                                    requiredITunesVersion, installedITunesVersion);
+                MessageBox.Show(
+                    owner: this,
+                    text: messageText,
+                    caption: "Seas0nPass",
+                    buttons: MessageBoxButtons.OK,
+                    icon: MessageBoxIcon.Exclamation
+                );
+            }
+        }
+
+        public void ShowNotEnoughFreeSpaceMessage()
+        {
+            if (InvokeRequired)
+            {
+                Invoke((Action)ShowNotEnoughFreeSpaceMessage);
+            }
+            else
+            {
+                MessageBox.Show(
+                    owner: this,
+                    text: "Seas0nPass requires at least 3.5GB of free disk space. Please check to ensure you have enough disk space available and re-run Seas0nPass.",
+                    caption: "Seas0nPass",
+                    buttons: MessageBoxButtons.OK,
+                    icon: MessageBoxIcon.Exclamation
+                );
+            }
+        }
+
+        public bool ConfirmITunesAutomation()
+        {
+            if (InvokeRequired)
+            {
+                return (bool)Invoke((Func<bool>)ConfirmITunesAutomation);
+            }
+            return
+                MessageBox.Show(this, "Would you like iTunes to restore the firmware automatically?", "Seas0nPass", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+                == DialogResult.Yes;
+        }
+
+        public void ShowManualRestoreInstructions(string fileName)
+        {
+            if (InvokeRequired)
+            {
+                Invoke((Action)(() => ShowManualRestoreInstructions(fileName)));
+            }
+            else
+            {
+                var text = "Follow these steps to restore the custom firmware to the AppleTV.\n\n" +
+                           "1. Open iTunes and select the AppleTV from the sidebar.\n" +
+                           "2. Hold down 'Shift' and click the 'Restore' button.\n" +
+                           "3. Select the {0} file located in My Documents";
+
+                MessageBox.Show(this, string.Format(text, fileName), "Seas0nPass", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+              
         public void ShowDownloadFailedMessage()
         {
-            MessageBox.Show(
-                text: "Unable to download firmware. Please check your internet connection or firewall settings and try again.",
-                caption: "Seas0nPass",
-                buttons: MessageBoxButtons.OK,
-                icon: MessageBoxIcon.Exclamation
-            );
+            if (InvokeRequired)
+            {
+                Invoke((Action)ShowDownloadFailedMessage);
+            }
+            else
+            {
+                MessageBox.Show(
+                    owner: this,
+                    text: "Unable to download firmware. Please check your internet connection or firewall settings and try again.",
+                    caption: "Seas0nPass",
+                    buttons: MessageBoxButtons.OK,
+                    icon: MessageBoxIcon.Exclamation
+                    );
+            }
         }
 
         public void ShowTetherMessage(string fwName)
         {
-            MessageBox.Show(string.Format("The {0} firmware is untethered and does not require this process!", fwName),
-                "Untethered Jailbreak");
+            if (InvokeRequired)
+            {
+                Invoke((Action)(() => ShowTetherMessage(fwName)));
+            }
+            else
+            {
+                MessageBox.Show(this, string.Format("The {0} firmware is untethered and does not require this process!", fwName),
+                    "Untethered Jailbreak");
+            }
         }
 
         public void ShowControl(IView control)

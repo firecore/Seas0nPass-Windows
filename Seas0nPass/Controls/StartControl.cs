@@ -18,6 +18,7 @@ using Seas0nPass.Interfaces;
 using System.Security.Principal;
 using Seas0nPass.CustomEventArgs;
 using Seas0nPass.Models;
+using System.Threading;
 
 namespace Seas0nPass.Controls
 {
@@ -132,6 +133,11 @@ namespace Seas0nPass.Controls
         private void tetheredPictureBox_MouseUp(object sender, MouseEventArgs e)
         {
             SetPressedState((Control)sender, false);
+        }
+
+        public SynchronizationContext SyncContext
+        {
+            get { return new WindowsFormsSynchronizationContext(); }
         }
     }
 }

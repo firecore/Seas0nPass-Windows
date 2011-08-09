@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using Seas0nPass.CustomEventArgs;
 using Seas0nPass.Models;
+using System.Threading;
 
 namespace Seas0nPass.Interfaces
 {
@@ -20,6 +21,8 @@ namespace Seas0nPass.Interfaces
         event EventHandler<CreateIPSWClickedEventArgs> CreateIPSWClicked;
         event EventHandler<CreateIPSWFirmwareClickedEventArgs> CreateIPSW_fwVersion_Clicked; 
         event EventHandler TetherClicked;
+
+        SynchronizationContext SyncContext { get; }
 
         void DisableTether();
         void EnableTether();
