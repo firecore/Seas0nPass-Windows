@@ -1,0 +1,194 @@
+set $orig_filename AppleTV2,1_4.2.1_8C154_Restore.ipsw
+set $patched_filename AppleTV2,1_4.2.1_8C154_SP_Restore.ipsw
+set $folder AppleTV2,1_4.2.1_8C154
+set $downUrl http://appldnld.apple.com/AppleTV/061-9978.20101214.gmabr/AppleTV2,1_4.2.1_8C154_Restore.ipsw
+set $needTether false
+set $save_iBEC false
+
+-- $md5 will be used to determine which fw version was selected (for manual selection)
+set $md5 3fe1a01b8f5c8425a074ffd6deea7c86
+-- $name will be displayed in drop-down menu of "Create IPSW" button
+set $name "4.2.1 8C154"
+
+set $fw_code 8C154
+set $orig_dmg 038-0318-001.dmg
+set $other_dmg 038-0316-001.dmg
+
+set $orig_dmg_iv_key 7c256102d0580b960213540965618b5b
+set $orig_dmg_k_key 5d4e967158ab75ba27ec281bff4e714dacc88123ea4913ae2bee6a719c15496c
+set $other_dmg_k_key 5407d28e075f5a2e06fddb7ad00123aa5a528bd6c2850d5fa0908a4dcae7dd3e00a9cdb2
+
+set $dfu_iv_key 03baadf8801e8b7cdcee5a9f53609d0c
+set $dfu_k_key c9f8bd4e52530ec8ef3e2b5926777f624061a38d09f07785287de6e88353f752
+
+
+-- unzip firmware
+message "Unzipping..."
+resetdir UNZIPPED_ORIGINAL
+unzip firmware.ipsw UNZIPPED_ORIGINAL
+progress 5
+
+-- decrypt_ramdisk
+message "Decrypting ramdisk..."
+resetdir ipsw
+resetdir tmp
+resetdir output
+exec xpwntool.exe .\UNZIPPED_ORIGINAL\$orig_dmg ipsw/$orig_dmg -iv $orig_dmg_iv_key -k $orig_dmg_k_key
+progress 6
+
+-- patch asr
+resetdir TMP
+copy ipsw\$orig_dmg tmp\our.dmg
+message "Patching ramdisk..."
+exec hfsplus.exe .\tmp\our.dmg extract /usr/sbin/asr .\tmp\asr
+exec hfsplus.exe .\tmp\our.dmg rm /usr/sbin/asr
+exec hfsplus.exe .\tmp\our.dmg grow 16542208
+exec bspatch.exe .\tmp\asr .\tmp\asr.patched .\patches\$fw_code\asr.patch
+exec hfsplus.exe .\tmp\our.dmg add .\tmp\asr.patched /usr/sbin/asr
+exec hfsplus.exe .\tmp\our.dmg chmod 755 /usr/sbin/asr 
+progress 8
+
+-- encrypt ramdisk
+message "Encrypting ramdisk..."
+exec xpwntool.exe .\tmp\our.dmg .\output\$orig_dmg -iv $orig_dmg_iv_key -k $orig_dmg_k_key -t .\UNZIPPED_ORIGINAL\$orig_dmg
+progress 9
+
+-- decrypt filesystem
+message "Decrypting file system..."
+exec vfdecrypt.exe -i .\UNZIPPED_ORIGINAL\$other_dmg -k $other_dmg_k_key -o ipsw/$other_dmg
+progress 17
+copy ipsw\$other_dmg tmp\our-big.dmg
+
+-- unpakc filesystem image
+exec dmg-bin.exe extract .\tmp\our-big.dmg .\tmp\our-big-hfsimage.dmg
+progress 49
+
+message "Patching file system..."
+
+-- patch fstab
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg extract /etc/fstab .\tmp\fstab
+exec bspatch.exe .\tmp\fstab .\tmp\fstab.patched .\patches\$fw_code\fstab.patch
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg rm /etc/fstab
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\tmp\fstab.patched /etc/fstab
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 644 /etc/fstab
+
+progress 54
+
+-- patch appletv
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg extract /Applications/AppleTV.app/AppleTV .\tmp\AppleTV
+exec bspatch.exe .\tmp\AppleTV .\tmp\AppleTV.patched .\patches\$fw_code\AppleTV.patch
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg rm /Applications/AppleTV.app/AppleTV
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\tmp\AppleTV.patched /Applications/AppleTV.app/AppleTV
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 775 /Applications/AppleTV.app/AppleTV
+
+progress 55
+
+-- patch services plist
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg extract /System/Library/Lockdown/Services.plist .\tmp\Services.plist
+exec bspatch.exe .\tmp\Services.plist .\tmp\Services.plist.patched .\patches\$fw_code\Services.patch
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg rm /System/Library/Lockdown/Services.plist
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\tmp\Services.plist.patched /System/Library/Lockdown/Services.plist
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 644 /System/Library/Lockdown/Services.plist
+
+-- add hfs mdb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\patches\$fw_code\hfs_mdb  /usr/lib/hfs_mdb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 755 /usr/lib/hfs_mdb
+
+-- add kernel sploit
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\patches\$fw_code\kern_sploit  /usr/lib/kern_sploit
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 755 /usr/lib/kern_sploit
+
+-- add punchd
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg extract /sbin/launchd .\tmp\launchd
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg rm /sbin/launchd
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\patches\$fw_code\punchd /sbin/launchd
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 755 /sbin/launchd
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\tmp\launchd /sbin/punchd
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 555 /sbin/punchd
+
+progress 56
+
+message "Installing software..."
+resetdir tmp\cydia
+ungzip cydia.tgz tmp\cydia cydia.tar
+progress 59
+
+-- add cydia to image
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg untar .\tmp\cydia\cydia.tar
+
+-- add other debs
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\DEBS\asubstratesafe.deb /private/var/root/Media/Cydia/AutoInstall/asubstratesafe.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 644 /private/var/root/Media/Cydia/AutoInstall/asubstratesafe.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\DEBS\bsubstrate.deb /private/var/root/Media/Cydia/AutoInstall/bsubstrate.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 644 /private/var/root/Media/Cydia/AutoInstall/bsubstrate.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\DEBS\awkwardtv.deb /private/var/root/Media/Cydia/AutoInstall/awkwardtv.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 644 /private/var/root/Media/Cydia/AutoInstall/awkwardtv.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\DEBS\com.nito.deb /private/var/root/Media/Cydia/AutoInstall/com.nito.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 644 /private/var/root/Media/Cydia/AutoInstall/com.nito.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\DEBS\org.xbmc.repo_0.1-1_iphoneos-arm.deb /private/var/root/Media/Cydia/AutoInstall/org.xbmc.repo_0.1-1_iphoneos-arm.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 644 /private/var/root/Media/Cydia/AutoInstall/org.xbmc.repo_0.1-1_iphoneos-arm.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\DEBS\syslogd.deb /private/var/root/Media/Cydia/AutoInstall/syslogd.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 644 /private/var/root/Media/Cydia/AutoInstall/syslogd.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\DEBS\com.firecore.seas0npass.deb /private/var/root/Media/Cydia/AutoInstall/com.firecore.seas0npass.deb
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 644 /private/var/root/Media/Cydia/AutoInstall/com.firecore.seas0npass.deb
+
+progress 177
+
+-- create symlinks
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg mkdir /var/stash
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg mkdir /usr/include
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg mv      /Applications      /var/stash/Applications
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg mv      /Library/Ringtones /var/stash/Ringtones
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg mv      /Library/Wallpaper /var/stash/Wallpaper
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg mv      /usr/bin           /var/stash/bin
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg mv      /usr/include       /var/stash/include
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg mv      /usr/lib/pam       /var/stash/pam
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg mv      /usr/libexec       /var/stash/libexec
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg mv      /usr/share         /var/stash/share
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg symlink /Applications      var/stash/Applications
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg symlink /Library/Ringtones ../var/stash/Ringtones
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg symlink /Library/Wallpaper ../var/stash/Wallpaper
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg symlink /usr/bin           ../var/stash/bin
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg symlink /usr/include       ../var/stash/include
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg symlink /usr/lib/pam       ../../var/stash/pam
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg symlink /usr/libexec       ../var/stash/libexec
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg symlink /usr/share         ../var/stash/share
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmodh 755 /Applications
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmodh 755 /Library/Ringtones
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmodh 755 /Library/Wallpaper
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmodh 755 /usr/bin
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmodh 755 /usr/include
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmodh 755 /usr/lib/pam
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmodh 755 /usr/libexec
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmodh 755 /usr/share
+
+-- add uncompress
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg add .\patches\$fw_code\uncompress /bin/uncompress
+exec hfsplus.exe .\tmp\our-big-hfsimage.dmg chmod 755 /bin/uncompress
+
+progress 179
+message "Creating IPSW..."
+
+-- pack filesystem
+exec dmg-bin.exe build .\tmp\our-big-hfsimage.dmg .\output\$other_dmg
+
+copy UNZIPPED_ORIGINAL\kernelcache.release.k66  OUTPUT\kernelcache.release.k66
+copy UNZIPPED_ORIGINAL\BuildManifest.plist  OUTPUT\BuildManifest.plist
+copy UNZIPPED_ORIGINAL\Restore.plist  OUTPUT\Restore.plist
+
+resetdir OUTPUT\Firmware
+copydir UNZIPPED_ORIGINAL\Firmware OUTPUT\Firmware
+
+-- patch dfu
+exec xpwntool.exe .\OUTPUT\Firmware\dfu\iBSS.k66ap.RELEASE.dfu  .\OUTPUT\Firmware\dfu\decrypted.dfu -iv $dfu_iv_key -k $dfu_k_key
+exec bspatch.exe .\OUTPUT\Firmware\dfu\decrypted.dfu .\OUTPUT\Firmware\dfu\patched.dfu .\patches\$fw_code\iBSS.k66ap.RELEASE.patch
+exec xpwntool.exe .\OUTPUT\Firmware\dfu\patched.dfu .\OUTPUT\Firmware\dfu\encrypted.dfu -iv $dfu_iv_key -k $dfu_k_key -t .\OUTPUT\Firmware\dfu\iBSS.k66ap.RELEASE.dfu
+
+progress 229
+message "Compressing IPSW..."
+delete OUTPUT\Firmware\dfu\iBSS.k66ap.RELEASE.dfu
+delete OUTPUT\Firmware\dfu\patched.dfu
+delete OUTPUT\Firmware\dfu\decrypted.dfu
+move OUTPUT\Firmware\dfu\encrypted.dfu OUTPUT\Firmware\dfu\iBSS.k66ap.RELEASE.dfu
+
+-- now all files from OUTPUT will be packed into new firmware image

@@ -1,0 +1,12 @@
+Comodo: Internet Security;cmdagent;cfp
+Symantec: Norton Internet Security;ccSvcHst
+McAfee: Total Protection;mcagent;McSvHost;mfefire;mfevtps;mcshield
+Kaspersky: Internet Security;avp
+ESET: Smart Security;ekrn
+Avast Free AntiVirus;AvastSvc
+AVG: Internet Security;avgrsx;avgcsrvx;AVGIDSAge;avgfvs;avgwdsvc;avgtray
+Avira: Premium Security Suite;avgnt;avmailc;AVWEBGRD;avshadow;avguard;sched
+BitDefender: Internet Security Suite;vsserv;updatesrv;bdagent;pchookla
+Webroot: Internet Security Complete;AEI;SSU;WRTray;WRCleanup;wrhkisvc;WRConsum
+GFI: Vipre Antivirus Premium;SBAMSvc;SBPIMSvc;SBAMTray
+F-Secure: Internet Security;fsgk32st;FSGK32;fssm32;fsav32;FSMA32;FSDLL32;fsdfwd;fsorsp;FSM32
