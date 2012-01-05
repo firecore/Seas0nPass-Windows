@@ -21,6 +21,7 @@ namespace Seas0nPass.Models.PatchCommands
         public CommandResult(bool success, string errorText = null)
         {
             Success = success;
+            ErrorText = errorText;
         }
     }
 }

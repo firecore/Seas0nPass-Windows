@@ -14,12 +14,13 @@ using Seas0nPass.Interfaces;
 using System.IO;
 using Microsoft.Win32;
 using System.Diagnostics;
+using Seas0nPass.Utils;
 
 namespace Seas0nPass.Models
 {
     public class ITunesInfoProvider : IITunesInfoProvider
     {
-        private static readonly Version compatibleITunesVersion = new Version("10.4.0.80");
+        private static readonly Version compatibleITunesVersion = new Version("10.5");
         public ITunesInfo CheckITunesVersion()
         {
             string iTunesPath = GetITunesExePath();
@@ -70,18 +71,9 @@ namespace Seas0nPass.Models
                 foreach (string subKey in subKeyNames)
                 {
                     RegistryKey installProperties = key11.OpenSubKey(subKey);
-                    if (installProperties != null)
-                    {
-                        string name = (string)installProperties.GetValue(_displayName);
-                        if (name == "iTunes")
-                        {
-                            LogUtil.LogEvent(string.Format("Found iTunes in {0}", installProperties));
-                            string installPath = (string)installProperties.GetValue(_installLocation);
-                            string itunesExePath = Path.Combine(installPath, "iTunes.exe");
-                            LogUtil.LogEvent(string.Format("Path to iTunes is {0}", itunesExePath));
-                            return itunesExePath;
-                        }
-                    }
+                    string iTunesExePath = GetITunesExePathInternal(installProperties);
+                    if (!string.IsNullOrWhiteSpace(iTunesExePath))
+                        return iTunesExePath;
                 }
             }
 
@@ -101,24 +93,37 @@ namespace Seas0nPass.Models
                 foreach (string subKey in subKeyNames)
                 {
                     RegistryKey installProperties = key20.OpenSubKey(subKey + _registryPathSeparator + _installProperties);
-                    if (installProperties != null)
-                    {
-                        string name = (string)installProperties.GetValue(_displayName);
-                        if (name == "iTunes")
-                        {
-                            LogUtil.LogEvent(string.Format("Found iTunes in {0}", installProperties));
-                            string installPath = (string)installProperties.GetValue(_installLocation);
-                            string itunesExePath = Path.Combine(installPath, "iTunes.exe");
-                            LogUtil.LogEvent(string.Format("Path to iTunes is {0}", itunesExePath));
-                            return itunesExePath;
-                        }
-                    }
+                    string iTunesExePath = GetITunesExePathInternal(installProperties);
+                    if (!string.IsNullOrWhiteSpace(iTunesExePath))
+                        return iTunesExePath;
                 }
             }
 
             LogUtil.LogEvent(string.Format("iTunes was not found in {0} registry key", key20));
 
             return "";
+        }
+
+        private string GetITunesExePathInternal(RegistryKey installProperties)
+        {
+            if (installProperties == null)
+                return null;
+             
+            string name = (string)installProperties.GetValue(_displayName);
+            if (name != "iTunes")
+                return null;
+
+            LogUtil.LogEvent(string.Format("Found iTunes in {0}", installProperties));
+            string installPath = (string)installProperties.GetValue(_installLocation);
+            if (string.IsNullOrWhiteSpace(installPath)) // skip corrupted registry entries with empty installPath
+            {
+                LogUtil.LogEvent(string.Format("iTunes registry entry in {0} is curruptes - InstallPath is empty", installProperties));
+                return null;
+            }
+
+            string itunesExePath = Path.Combine(installPath, "iTunes.exe");
+            LogUtil.LogEvent(string.Format("Path to iTunes is {0}", itunesExePath));
+            return itunesExePath;
         }
     }
 }

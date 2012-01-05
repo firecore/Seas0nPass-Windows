@@ -17,5 +17,8 @@ namespace Seas0nPass.Interfaces
     {
         bool IsTetherPossible();
         void SetFirmwareVersionModel(IFirmwareVersionModel firmwareVersionModel);
+
+        IEnumerable<string> GetProgramsToWarnNames();
+
     }
 }

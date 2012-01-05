@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.IO;
 using Microsoft.Win32;
+using Seas0nPass.Utils;
 
 namespace Seas0nPass.Models
 {

@@ -25,6 +25,8 @@ namespace Seas0nPass
             InitializeComponent();
         }
 
+        public event EventHandler Loaded;
+
         public void ShowCompatibleITunesVersionIsNotInstalled(string requiredITunesVersion, string installedITunesVersion)
         {
             if (InvokeRequired)
@@ -50,6 +52,27 @@ namespace Seas0nPass
                 );
             }
         }
+
+
+        public void ShowCantAccessOriginalFirmwareMessage(string filePath)
+        {
+            if (InvokeRequired)
+            {
+                Invoke((Action)(() => ShowCantAccessOriginalFirmwareMessage(filePath)));
+            }
+            else
+            {
+                MessageBox.Show(
+                    owner: this,
+                    text: string.Format("The firmware file {0} is either corrupt or not accessible. " +
+                        "Please check the firmware file and save it to the local disk.", filePath),
+                    caption: "Seas0nPass",
+                    buttons: MessageBoxButtons.OK,
+                    icon: MessageBoxIcon.Exclamation
+                );
+            }
+        }
+
 
         public void ShowNotEnoughFreeSpaceMessage()
         {
@@ -97,7 +120,7 @@ namespace Seas0nPass
             }
         }
 
-              
+
         public void ShowDownloadFailedMessage()
         {
             if (InvokeRequired)
@@ -142,6 +165,42 @@ namespace Seas0nPass
                 Invoke(action);
             else
                 action();
+        }
+
+        public void ShowProgramsWarning(IEnumerable<string> programNames)
+        {
+            var programsString = "";
+            var i = 0;
+            foreach (var programName in programNames)
+            {
+                if (programsString != "")
+                    programsString += "\n";
+                programsString += String.Format("{0}. {1}", ++i,  programName);
+            }
+            MessageBox.Show(
+                this,
+                string.Format
+                (
+                    "The program(s) listed below may prevent Seas0nPass from running correctly. Please close these program(s) before continuing.\n{0}",
+                    programsString
+                ),
+                "Seas0nPass", 
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+        }
+
+        public void ShowCrashMessage()
+        {
+            MessageBox.Show(this, 
+                "Seas0nPass has detected critical error(s) and cannot continue.\nPlease ensure no conflicting software is running and try again.",
+                "Seas0nPass",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+
+        private void MainForm_Shown(object sender, EventArgs e)
+        {
+            Loaded(this, e);
         }
     }
 }

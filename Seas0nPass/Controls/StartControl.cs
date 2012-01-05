@@ -34,6 +34,7 @@ namespace Seas0nPass.Controls
             tetherNotRequiredImage = tetheredPictureBox.BackgroundImage;
             tetherDisabledImage = tetheredPictureBox.InitialImage;
             tetherEnabledImage = tetheredPictureBox.ErrorImage;
+
         }
 
         public event EventHandler<CreateIPSWFirmwareClickedEventArgs> CreateIPSW_fwVersion_Clicked;
@@ -70,7 +71,7 @@ namespace Seas0nPass.Controls
         }
 
         public void DisableTether()
-        {            
+        {
             tetheredPictureBox.BackgroundImage = tetherDisabledImage;
             tetheredPictureBox.Enabled = false;
             tetherLabel.Enabled = false;
@@ -138,6 +139,14 @@ namespace Seas0nPass.Controls
         public SynchronizationContext SyncContext
         {
             get { return new WindowsFormsSynchronizationContext(); }
+        }
+
+
+        public void ResetState()
+        {
+            SetPressedState(tetheredPictureBox, false);
+            SetPressedState(ipswPictureBox, false);          
+
         }
     }
 }

@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Seas0nPass.Utils;
 
 namespace Seas0nPass.Models.PatchCommands
 {
@@ -35,7 +36,7 @@ namespace Seas0nPass.Models.PatchCommands
             if (string.IsNullOrWhiteSpace(dest))
                 return Error("the destination folder path was empty or white space");
 
-            Utils.CopyDirectory(source, dest);
+            MiscUtils.CopyDirectory(source, dest);
 
             return Success();
         }

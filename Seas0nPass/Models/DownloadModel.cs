@@ -17,12 +17,13 @@ using System.IO;
 using System.Threading;
 using System.ComponentModel;
 using System.Diagnostics;
+using Seas0nPass.Utils;
 
 namespace Seas0nPass.Models
 {
     public class DownloadModel : IDownloadModel
     {
-        private readonly string fileName = Path.Combine(Utils.WORKING_FOLDER, Utils.DOWNLOADED_FILE_PATH);
+        private readonly string fileName = Path.Combine(MiscUtils.WORKING_FOLDER, MiscUtils.DOWNLOADED_FILE_PATH);
         private readonly WebClient webClient;
         private IFirmwareVersionModel firmwareVersionModel;
 
@@ -41,13 +42,13 @@ namespace Seas0nPass.Models
         }
 
         private void PerformStart()
-        {
-            if (File.Exists(firmwareVersionModel.ExistingFirmwarePath) &&
-                Utils.ComputeMD5(firmwareVersionModel.ExistingFirmwarePath) == firmwareVersionModel.CorrectFirmwareMD5)
+        {            
+            if (SafeFile.Exists(firmwareVersionModel.ExistingFirmwarePath) &&
+                MiscUtils.ComputeMD5(firmwareVersionModel.ExistingFirmwarePath) == firmwareVersionModel.CorrectFirmwareMD5)
             {
                 LogUtil.LogEvent("Original firmware found on disk");
 
-                File.Copy(firmwareVersionModel.ExistingFirmwarePath, Path.Combine(Utils.WORKING_FOLDER, Utils.DOWNLOADED_FILE_PATH), true);
+                SafeFile.Copy(firmwareVersionModel.ExistingFirmwarePath, Path.Combine(MiscUtils.WORKING_FOLDER, MiscUtils.DOWNLOADED_FILE_PATH), true);
                 if (DownloadCompleted != null)
                     DownloadCompleted(this, EventArgs.Empty);
                 return;
@@ -59,7 +60,7 @@ namespace Seas0nPass.Models
         }
 
         public void StartDownload()
-        {
+        {            
             var worker = new BackgroundWorker();
             worker.DoWork += new DoWorkEventHandler((sender, e) => PerformStart());
             worker.RunWorkerAsync();
@@ -92,7 +93,7 @@ namespace Seas0nPass.Models
 
             LogUtil.LogEvent("Download completed");
 
-            File.Copy(Path.Combine(Utils.WORKING_FOLDER, Utils.DOWNLOADED_FILE_PATH), firmwareVersionModel.ExistingFirmwarePath, true);
+            SafeFile.Copy(Path.Combine(MiscUtils.WORKING_FOLDER, MiscUtils.DOWNLOADED_FILE_PATH), firmwareVersionModel.ExistingFirmwarePath, true);
 
             LogUtil.LogEvent("Downloaded file copied to Documents folder");
 
@@ -112,14 +113,17 @@ namespace Seas0nPass.Models
 
         public void CancelDownload()
         {
+            if (!webClient.IsBusy) // already canceled or used ExistingFirmwarePath
+                return;
+
             LogUtil.LogEvent("Cancelling download");
             webClient.CancelAsync();
             while (webClient.IsBusy)
             {
                 Thread.Sleep(50);
             }
-            if (File.Exists(fileName))
-                File.Delete(fileName);
+            if (SafeFile.Exists(fileName))
+                SafeFile.Delete(fileName);
         }
 
         public void SetFirmwareVersionModel(IFirmwareVersionModel firmwareVersionModel)

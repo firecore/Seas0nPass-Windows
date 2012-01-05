@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using System.IO;
+using Seas0nPass.Utils;
 
 namespace Seas0nPass.Models.PatchCommands
 {
@@ -35,11 +36,11 @@ namespace Seas0nPass.Models.PatchCommands
                 FileName = exePath,
                 Arguments = argsString,
                 WindowStyle = ProcessWindowStyle.Hidden,
-                WorkingDirectory = Directory.GetCurrentDirectory(),
+                WorkingDirectory = SafeDirectory.GetCurrentDirectory(),
             };
 
             LogUtil.LogEvent(string.Format("Running process: {0}, args: {1} ", processStartInfo.FileName, processStartInfo.Arguments));
-            var p = Process.Start(processStartInfo);
+            var p = WinProcessUtil.StartNewProcess(processStartInfo);
             p.WaitForExit();
             if (p.ExitCode != 0)
             {

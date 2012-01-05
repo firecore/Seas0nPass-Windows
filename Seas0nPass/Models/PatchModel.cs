@@ -15,6 +15,7 @@ using System.Threading;
 using System.IO;
 using System.Diagnostics;
 using System.ComponentModel;
+using Seas0nPass.Utils;
 
 namespace Seas0nPass.Models
 {
@@ -48,6 +49,7 @@ namespace Seas0nPass.Models
         {
             var worker = new BackgroundWorker();
             worker.DoWork += worker_DoWork;
+            worker.RunWorkerCompleted += (sender, args) => { if (args.Error != null) throw args.Error; };
             worker.RunWorkerAsync();
         }
 
@@ -79,21 +81,32 @@ namespace Seas0nPass.Models
 
         private void SaveDFUAndTetherFiles()
         {
-            LogUtil.LogEvent(string.Format("Saving {0} and {1} files", Utils.KERNEL_CACHE_FILE_NAME, Utils.IBSS_FILE_NAME));
+            LogUtil.LogEvent(string.Format("Saving {0} and {1} files", MiscUtils.KERNEL_CACHE_FILE_NAME, MiscUtils.IBSS_FILE_NAME));
 
-            Utils.RecreateDirectory(firmwareVersionModel.AppDataFolder);
+            MiscUtils.RecreateDirectory(firmwareVersionModel.AppDataFolder);
 
             LogUtil.LogEvent(string.Format("Directory {0} recreated successfully", firmwareVersionModel.AppDataFolder));
 
-            File.Copy(Path.Combine(Utils.WORKING_FOLDER, Utils.OUTPUT_FOLDER_NAME, Utils.KERNEL_CACHE_FILE_NAME),
-                      Path.Combine(firmwareVersionModel.AppDataFolder, Utils.KERNEL_CACHE_FILE_NAME), true);
+            string kernelcache = Path.Combine(MiscUtils.WORKING_FOLDER, MiscUtils.OUTPUT_FOLDER_NAME, MiscUtils.KERNEL_CACHE_FILE_NAME);
+            if (SafeFile.Exists(kernelcache))
+            {
+                SafeFile.Copy(kernelcache, Path.Combine(firmwareVersionModel.AppDataFolder, MiscUtils.KERNEL_CACHE_FILE_NAME), true);
+                LogUtil.LogEvent(string.Format("{0} file copied successfully", MiscUtils.KERNEL_CACHE_FILE_NAME));
+            }
 
-            LogUtil.LogEvent(string.Format("{0} file copied successfully", Utils.KERNEL_CACHE_FILE_NAME));
+            string iBSS = Path.Combine(MiscUtils.WORKING_FOLDER, MiscUtils.OUTPUT_FOLDER_NAME, MiscUtils.FIRMWARE_FOLDER_NAME, MiscUtils.DFU_FOLDER_NAME, MiscUtils.IBSS_FILE_NAME);
+            if (SafeFile.Exists(iBSS))
+            {
+                SafeFile.Copy(iBSS, Path.Combine(firmwareVersionModel.AppDataFolder, MiscUtils.IBSS_FILE_NAME), true);
+                LogUtil.LogEvent(string.Format("{0} file copied successfully", MiscUtils.IBSS_FILE_NAME));
+            }
 
-            File.Copy(Path.Combine(Utils.WORKING_FOLDER, Utils.OUTPUT_FOLDER_NAME, Utils.FIRMWARE_FOLDER_NAME, Utils.DFU_FOLDER_NAME, Utils.IBSS_FILE_NAME),
-                      Path.Combine(firmwareVersionModel.AppDataFolder, Utils.IBSS_FILE_NAME), true);
-
-            LogUtil.LogEvent(string.Format("{0} file copied successfully", Utils.IBSS_FILE_NAME));
+            string iBEC = Path.Combine(MiscUtils.WORKING_FOLDER, MiscUtils.OUTPUT_FOLDER_NAME, MiscUtils.FIRMWARE_FOLDER_NAME, MiscUtils.DFU_FOLDER_NAME, MiscUtils.IBEC_FILE_NAME);
+            if (firmwareVersionModel.SelectedVersion.Save_iBEC && SafeFile.Exists(iBEC))
+            {
+                SafeFile.Copy(iBEC, Path.Combine(firmwareVersionModel.AppDataFolder, MiscUtils.IBEC_FILE_NAME), true);
+                LogUtil.LogEvent(string.Format("{0} file copied successfully", MiscUtils.IBEC_FILE_NAME));
+            }
         }
 
         private IPatch GetPatch()
@@ -120,7 +133,7 @@ namespace Seas0nPass.Models
 
             SaveDFUAndTetherFiles();
 
-            File.Copy(resultFile, firmwareVersionModel.PatchedFirmwarePath, true);           
+            SafeFile.Copy(resultFile, firmwareVersionModel.PatchedFirmwarePath, true);           
 
             if (Finished != null)
                 Finished(this, EventArgs.Empty);

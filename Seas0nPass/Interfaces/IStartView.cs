@@ -28,5 +28,7 @@ namespace Seas0nPass.Interfaces
         void EnableTether();
         void SetTetherNotRequiredState();
         void InitFirmwaresList(FirmwareVersion[] firmwares);
+
+        void ResetState();
     }
 }

@@ -25,5 +25,6 @@ namespace Seas0nPass.Models
         public string Folder { get; set; }
         public string DownloadUrl { get; set; }
         public bool NeedTether { get; set; }
+        public bool Save_iBEC { get; set; }
     }
 }

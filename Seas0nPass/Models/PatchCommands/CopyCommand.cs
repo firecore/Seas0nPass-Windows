@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using Seas0nPass.Utils;
 
 namespace Seas0nPass.Models.PatchCommands
 {
@@ -36,8 +37,8 @@ namespace Seas0nPass.Models.PatchCommands
             if (string.IsNullOrWhiteSpace(to))
                 return Error("the destination path was empty or white space");
 
-            File.Copy(Path.Combine(Directory.GetCurrentDirectory(), from),
-                      Path.Combine(Directory.GetCurrentDirectory(), to));
+            SafeFile.Copy(Path.Combine(SafeDirectory.GetCurrentDirectory(), from),
+                      Path.Combine(SafeDirectory.GetCurrentDirectory(), to));
 
             return Success();
         }

@@ -83,7 +83,7 @@
             // ipswContextMenuStrip
             // 
             this.ipswContextMenuStrip.Name = "ipswContextMenuStrip";
-            this.ipswContextMenuStrip.Size = new System.Drawing.Size(153, 26);
+            this.ipswContextMenuStrip.Size = new System.Drawing.Size(61, 4);
             // 
             // ipswLabel
             // 

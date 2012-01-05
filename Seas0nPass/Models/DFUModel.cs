@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Globalization;
+using Seas0nPass.Utils;
 
 namespace Seas0nPass.Models
 {
@@ -67,29 +68,45 @@ namespace Seas0nPass.Models
         {
             LogUtil.LogEvent("Restoring DFU file");
 
-            File.Copy(Path.Combine(firmwareVersionModel.AppDataFolder, Utils.IBSS_FILE_NAME),
-                Path.Combine(Utils.BIN_DIRECTORY, Utils.IBSS_FILE_NAME), true);
+            string iBSS = Path.Combine(firmwareVersionModel.AppDataFolder, MiscUtils.IBSS_FILE_NAME);
+            if (SafeFile.Exists(iBSS))
+                SafeFile.Copy(iBSS, Path.Combine(MiscUtils.BIN_DIRECTORY, MiscUtils.IBSS_FILE_NAME), true);
+
+            string iBEC = Path.Combine(firmwareVersionModel.AppDataFolder, MiscUtils.IBEC_FILE_NAME);
+            if (SafeFile.Exists(iBEC))
+                SafeFile.Copy(iBEC, Path.Combine(MiscUtils.BIN_DIRECTORY, MiscUtils.IBEC_FILE_NAME), true);
         }
 
         private void RunDFU()
         {
             RestoreDFUFile();
 
-            LogUtil.LogEvent("DFU process starting");
+            SafeDirectory.SetCurrentDirectory(MiscUtils.BIN_DIRECTORY);
 
-            Directory.SetCurrentDirectory(Utils.BIN_DIRECTORY);
+            var files = new List<string>();
+            if (SafeFile.Exists(MiscUtils.IBSS_FILE_NAME))
+                files.Add(MiscUtils.IBSS_FILE_NAME);
+            if (SafeFile.Exists(MiscUtils.IBEC_FILE_NAME))
+                files.Add(MiscUtils.IBEC_FILE_NAME);
+            string arguments = string.Join(" ", files);
 
-            var p = new Process();
+            LogUtil.LogEvent(string.Format("DFU process starting for {0}", arguments));
+            RunDFUProcess(arguments);
+        }
+
+        private void RunDFUProcess(string arguments)
+        {
+            var p = WinProcessUtil.StartNewProcess();
             p.StartInfo.FileName = @"dfu.exe";
-            p.StartInfo.Arguments = @"iBSS.k66ap.RELEASE.dfu";
+            p.StartInfo.Arguments = arguments;
 
             p.StartInfo.UseShellExecute = false;
             p.StartInfo.CreateNoWindow = true;
             p.StartInfo.RedirectStandardError = true;
             p.StartInfo.RedirectStandardOutput = true;
-            p.OutputDataReceived +=new DataReceivedEventHandler((sender, e) => HandleOutputData(e.Data));
+            p.OutputDataReceived += new DataReceivedEventHandler((sender, e) => HandleOutputData(e.Data));
             p.ErrorDataReceived += new DataReceivedEventHandler((sender, e) => HandleOutputData(e.Data));
-                        
+
             p.Start();
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();

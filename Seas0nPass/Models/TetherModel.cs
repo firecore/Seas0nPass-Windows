@@ -15,6 +15,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Globalization;
+using Seas0nPass.Utils;
 
 namespace Seas0nPass.Models
 {
@@ -29,7 +30,6 @@ namespace Seas0nPass.Models
             worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
 
             worker.RunWorkerAsync();
-
         }
 
         void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -47,32 +47,44 @@ namespace Seas0nPass.Models
         {
             LogUtil.LogEvent("Restoring DFU and Tether file");
 
-            File.Copy(Path.Combine(firmwareVersionModel.AppDataFolder, Utils.KERNEL_CACHE_FILE_NAME),
-                Path.Combine(Utils.BIN_DIRECTORY, Utils.KERNEL_CACHE_FILE_NAME), true);
+            string kernelCache = Path.Combine(firmwareVersionModel.AppDataFolder, MiscUtils.KERNEL_CACHE_FILE_NAME);
+            if (SafeFile.Exists(kernelCache))
+                SafeFile.Copy(kernelCache, Path.Combine(MiscUtils.BIN_DIRECTORY, MiscUtils.KERNEL_CACHE_FILE_NAME), true);
 
-            File.Copy(Path.Combine(firmwareVersionModel.AppDataFolder, Utils.IBSS_FILE_NAME),
-                Path.Combine(Utils.BIN_DIRECTORY, Utils.IBSS_FILE_NAME), true);
+            string iBSS = Path.Combine(firmwareVersionModel.AppDataFolder, MiscUtils.IBSS_FILE_NAME);
+            if (SafeFile.Exists(iBSS))
+                SafeFile.Copy(iBSS, Path.Combine(MiscUtils.BIN_DIRECTORY, MiscUtils.IBSS_FILE_NAME), true);
 
+            string iBEC = Path.Combine(firmwareVersionModel.AppDataFolder, MiscUtils.IBEC_FILE_NAME);
+            if (SafeFile.Exists(iBEC))
+                SafeFile.Copy(iBEC, Path.Combine(MiscUtils.BIN_DIRECTORY, MiscUtils.IBEC_FILE_NAME), true);
         }
-
-
 
         private void RunTether()
         {
-
             RestoreDFUAndTetherFiles();
 
-            Directory.SetCurrentDirectory(Utils.BIN_DIRECTORY);
+            SafeDirectory.SetCurrentDirectory(MiscUtils.BIN_DIRECTORY);
 
             LogUtil.LogEvent("Tether process starting");
 
-            var p = new Process();
+            var p = WinProcessUtil.StartNewProcess();
             p.StartInfo.FileName = @"tether.exe";
-            p.StartInfo.Arguments = @"iBSS.k66ap.RELEASE.dfu kernelcache.release.k66";
+
+            var files = new List<string>();
+            if (File.Exists(MiscUtils.IBSS_FILE_NAME))
+                files.Add(MiscUtils.IBSS_FILE_NAME);
+            if (File.Exists(MiscUtils.IBEC_FILE_NAME))
+                files.Add(MiscUtils.IBEC_FILE_NAME);
+            if (File.Exists(MiscUtils.KERNEL_CACHE_FILE_NAME))
+                files.Add(MiscUtils.KERNEL_CACHE_FILE_NAME);
+            string arguments = string.Join(" ", files);
+
+            p.StartInfo.Arguments = arguments;
 
             p.StartInfo.UseShellExecute = false;
             p.StartInfo.CreateNoWindow = true;
-            p.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
+            p.StartInfo.WorkingDirectory = SafeDirectory.GetCurrentDirectory();
 
             p.StartInfo.RedirectStandardError = true;
             p.StartInfo.RedirectStandardOutput = true;
@@ -92,8 +104,6 @@ namespace Seas0nPass.Models
                 LogUtil.LogEvent(errorString);
                 throw new InvalidOperationException(errorString);
             }
-
-
         }
 
         public void HandleOutputData(string data)
@@ -123,10 +133,8 @@ namespace Seas0nPass.Models
 
         }
 
-
-
+        public event EventHandler ProgressChanged;
         public event EventHandler ProcessFinished;
-
         public event EventHandler CurrentMessageChanged;
 
         public string CurrentMessage
@@ -134,26 +142,16 @@ namespace Seas0nPass.Models
             get { return currentMessage; }
         }
 
-
-
-
         private int progressPercentage;
-
         public int ProgressPercentage
         {
             get { return progressPercentage; }
         }
 
-        public event EventHandler ProgressChanged;
-
         private IFirmwareVersionModel firmwareVersionModel;
-
         public void SetFirmwareVersionModel(IFirmwareVersionModel firmwareVersionModel)
         {
             this.firmwareVersionModel = firmwareVersionModel;
         }
-
-
-
     }
 }

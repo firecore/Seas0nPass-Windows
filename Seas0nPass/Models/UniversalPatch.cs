@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Seas0nPass.Models.PatchCommands;
+using Seas0nPass.Utils;
 
 namespace Seas0nPass.Models
 {
@@ -65,7 +66,7 @@ namespace Seas0nPass.Models
 
         public string PerformPatch()
         {
-            Directory.SetCurrentDirectory(Utils.WORKING_FOLDER);
+            SafeDirectory.SetCurrentDirectory(MiscUtils.WORKING_FOLDER);
 
             UpdateProgress(0);
 
@@ -75,11 +76,12 @@ namespace Seas0nPass.Models
                 ExecuteCommand(command);
             }
 
-            var fullOutputFileName = Path.Combine(Directory.GetCurrentDirectory(), Utils.OUTPUT_FIRMWARE_NAME);
+            var fullOutputFileName = Path.Combine(SafeDirectory.GetCurrentDirectory(), MiscUtils.OUTPUT_FIRMWARE_NAME);
 
-            Directory.SetCurrentDirectory(Utils.OUTPUT_FOLDER_NAME);
+            SafeDirectory.SetCurrentDirectory(MiscUtils.OUTPUT_FOLDER_NAME);
 
-            ArchiveUtils.CreateSample(fullOutputFileName, null, Utils.GetAllFileInFodler(Directory.GetCurrentDirectory()));
+            string currentDirectory = SafeDirectory.GetCurrentDirectory();
+            ArchiveUtils.CreateSample(fullOutputFileName, null, MiscUtils.GetAllFileInFodler(currentDirectory));
 
             UpdateProgress(300);
 

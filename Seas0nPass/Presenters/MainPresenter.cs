@@ -14,6 +14,8 @@ using Seas0nPass.Interfaces;
 using Seas0nPass.CustomEventArgs;
 using System.IO;
 using System.Threading;
+using Seas0nPass.Utils;
+
 
 namespace Seas0nPass.Presenters
 {
@@ -105,12 +107,32 @@ namespace Seas0nPass.Presenters
             else
                 startControl.SetTetherNotRequiredState();
 
+            startControl.ResetState();
+
             view.ShowControl(startControl);
+        }
+
+        private void CheckForProgramsToWarn()
+        {
+            var programsToWarn = mainModel.GetProgramsToWarnNames();
+            if (!programsToWarn.Any())
+                return;
+            view.ShowProgramsWarning(programsToWarn);
+        }
+
+        public void HandleCrash()
+        {
+            view.ShowCrashMessage();
+            ShowStartPage();
         }
 
         public bool Init()
         {
+            MiscUtils.CleanUp();
+
             InstantiateModelsAndViews();
+
+            view.Loaded += new EventHandler(view_Loaded);
 
             ITunesInfo iTunesInfo = iTunesInfoProvider.CheckITunesVersion();
             if (!iTunesInfo.IsCompatible)
@@ -118,6 +140,7 @@ namespace Seas0nPass.Presenters
                 view.ShowCompatibleITunesVersionIsNotInstalled(iTunesInfo.RequiredVersion, iTunesInfo.InstalledVersion);
                 return false;
             }
+          
 
             startControl.InitFirmwaresList(firmwareVersionModel.KnownVersions.ToArray());
 
@@ -127,7 +150,13 @@ namespace Seas0nPass.Presenters
             dfuSuccessControl.ButtonClicked += dfuSuccessControl_ButtonClicked;
             tetherSuccessControl.ButtonClicked += tetherSuccessControl_ButtonClicked;
             ShowStartPage();
+            
             return true;
+        }
+
+        void view_Loaded(object sender, EventArgs e)
+        {
+            CheckForProgramsToWarn();
         }
 
         private void startControl_CreateIPSW_fwVersion_Clicked(object sender, CreateIPSWFirmwareClickedEventArgs e)
@@ -196,7 +225,18 @@ namespace Seas0nPass.Presenters
 
             if (!String.IsNullOrEmpty(fileName))
             {
-                firmwareVersionModel.CheckVersion(fileName);
+                LogUtil.LogEvent(string.Format("User has manually selected original firmware path: {0}", fileName));
+                try
+                {
+                    firmwareVersionModel.CheckVersion(fileName);
+                }
+                catch (IOException ex)
+                {
+                    LogUtil.LogEvent(string.Format("IOException during firmware MD5 check", fileName));
+                    LogUtil.LogException(ex);
+                    view.ShowCantAccessOriginalFirmwareMessage(fileName);
+                    return;
+                }
 
                 if (firmwareVersionModel.SelectedVersion == null)
                     return;
@@ -241,7 +281,7 @@ namespace Seas0nPass.Presenters
                 iTunesAutomationModel.Run();
             else
             {
-                Utils.OpenExplorerWindow(firmwareVersionModel.PatchedFirmwarePath);
+                MiscUtils.OpenExplorerWindow(firmwareVersionModel.PatchedFirmwarePath);
                 view.ShowManualRestoreInstructions(Path.GetFileName(firmwareVersionModel.PatchedFirmwarePath));
             }
         }

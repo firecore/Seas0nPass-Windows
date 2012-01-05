@@ -13,6 +13,7 @@ using System.Text;
 using Seas0nPass.Interfaces;
 using System.Xml.Serialization;
 using System.IO;
+using Seas0nPass.Utils;
 
 namespace Seas0nPass.Models
 {
@@ -25,7 +26,7 @@ namespace Seas0nPass.Models
         {
             get
             {
-                if (!File.Exists(fileName))
+                if (!SafeFile.Exists(fileName))
                     return null;
                 try
                 {

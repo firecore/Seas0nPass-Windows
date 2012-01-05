@@ -12,24 +12,40 @@ using System.Linq;
 using System.Text;
 using Seas0nPass.Interfaces;
 using System.IO;
+using System.Configuration;
+using Seas0nPass.Utils;
 
 namespace Seas0nPass.Models
 {
     public class FirmwareVersionModel : IFirmwareVersionModel
     {
+        private static readonly string DEFAULT_VERSION = "9A406a";
+
         public FirmwareVersionModel()
         {
             InitBinaries();
             InitVersionsList();
-            SelectedVersion = KnownVersions.OrderByDescending(x => x.Code).FirstOrDefault();
+            SelectedVersion = KnownVersions.Where(x => x.Code == DEFAULT_VERSION).FirstOrDefault();
         }
 
         public List<FirmwareVersion> KnownVersions { get; set; }
-        public FirmwareVersion SelectedVersion { get; set; }
+        private FirmwareVersion selectedVersion;
+        public FirmwareVersion SelectedVersion
+        {
+            get
+            {
+                return selectedVersion;
+            }
+            set
+            {
+                customFileLocation = null;
+                selectedVersion = value;
+            }
+        }
 
         public void CheckVersion(string path)
         {
-            var md5 = Utils.ComputeMD5(path);
+            var md5 = MiscUtils.ComputeMD5(path);
             SelectedVersion = KnownVersions.FirstOrDefault(x => x.MD5 == md5);
         }
 
@@ -58,7 +74,7 @@ namespace Seas0nPass.Models
         {
             get
             {
-                return Path.Combine(Utils.DOCUMENTS_HOME, "Downloads", GetOriginalFileName());
+                return Path.Combine(MiscUtils.DOCUMENTS_HOME, "Downloads", GetOriginalFileName());
             }
         }
 
@@ -66,7 +82,7 @@ namespace Seas0nPass.Models
         {
             get
             {
-                return Path.Combine(Utils.DOCUMENTS_HOME, GetPatchedFirmwareName());
+                return Path.Combine(MiscUtils.DOCUMENTS_HOME, GetPatchedFirmwareName());
             }
         }
 
@@ -116,10 +132,10 @@ namespace Seas0nPass.Models
         private void InitVersionsList()
         {
             KnownVersions = new List<FirmwareVersion>();
-            string[] directories = Directory.GetDirectories(Utils.PATCHES_DIRECTORY);
+            string[] directories = SafeDirectory.GetDirectories(MiscUtils.PATCHES_DIRECTORY);
             foreach (var dir in directories)
             {
-                string commandsPath = Path.Combine(dir+@"\", Utils.COMMANDS_FILE_NAME);
+                string commandsPath = Path.Combine(dir + @"\", MiscUtils.COMMANDS_FILE_NAME);
                 FirmwareVersion version = GetFirmwareVersion(commandsPath);
                 KnownVersions.Add(version);
             }
@@ -142,16 +158,48 @@ namespace Seas0nPass.Models
                     Folder = vars["$folder"],
                     DownloadUrl = vars["$downUrl"],
                     NeedTether = bool.Parse(vars["$needTether"]),
+                    Save_iBEC = bool.Parse(vars["$save_iBEC"]),
                     CommandsText = commandsText
                 };
             }
         }
 
+        private const string BINARIES_RESOURCE_NAME = "Seas0nPass.Resources.Binaries.zip";
         private void InitBinaries()
         {
-            var resource = Seas0nPass.ScriptResource.Binaries;
-            Utils.RecreateDirectory(Utils.WORKING_FOLDER); 
-            ArchiveUtils.GetViaZipInput(new MemoryStream(resource), Utils.WORKING_FOLDER);
+#if DEBUG
+            // for debug purpuses use local "Binaries" folder
+            string binariesPath = ConfigurationManager.AppSettings["binariesPath"];
+            if (string.IsNullOrEmpty(binariesPath))
+                throw new ArgumentException("Use binariesPath variable in app.config for debug!!!");
+
+            MiscUtils.RecreateDirectory(MiscUtils.WORKING_FOLDER);
+            CopyFolder(binariesPath, MiscUtils.WORKING_FOLDER);
+#else
+            // for production use embedded Binaries.zip
+            using (Stream io = this.GetType().Assembly.GetManifestResourceStream(BINARIES_RESOURCE_NAME))
+            {
+                MiscUtils.RecreateDirectory(MiscUtils.WORKING_FOLDER);
+                ArchiveUtils.GetViaZipInput(io, MiscUtils.WORKING_FOLDER);
+            }
+#endif
         }
+
+#if DEBUG
+        private static void CopyFolder(string sourcePath, string destinationPath)
+        {
+            //Now Create all of the directories
+            var directories = Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories)
+                .Where(x => !x.Contains("\\.svn")); // Exclude svn folders
+            foreach (string dirPath in directories)
+                Directory.CreateDirectory(dirPath.Replace(sourcePath, destinationPath));
+
+            //Copy all the files
+            var allFiles = Directory.GetFiles(sourcePath, "*.*", SearchOption.AllDirectories)
+                .Where(x => !x.Contains(".svn\\")); // Exclude files from svn folders
+            foreach (string newPath in allFiles)
+                File.Copy(newPath, newPath.Replace(sourcePath, destinationPath));
+        }
+#endif
     }
 }

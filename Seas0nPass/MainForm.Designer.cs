@@ -53,6 +53,7 @@
             this.MinimizeBox = false;
             this.Name = "MainForm";
             this.Text = "Seas0nPass";
+            this.Shown += new System.EventHandler(this.MainForm_Shown);
             this.ResumeLayout(false);
 
         }
